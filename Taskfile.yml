@@ -1,0 +1,23 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build the rainbase binary
+    cmds:
+      - go build -v cmd/rainbase.go
+
+  lint:
+    desc: Run golangci-lint on the repo
+    cmds:
+      - golangci-lint run
+
+  test:
+    desc: Run the test suite
+    cmds:
+      - go test
+
+  run:
+    desc: run the binary
+    cmds:
+      - task: build
+      - ./rainbase
