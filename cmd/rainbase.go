@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	uart, err := uart.NewConnection("/dev/ttyACM98", 9600)
+	uart, err := uart.NewConnection("/dev/ttyACM99", 9600)
 	if err != nil {
 		logrus.Fatal(err)
 	}

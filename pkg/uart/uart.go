@@ -6,29 +6,25 @@ import (
 )
 
 type Uart struct {
-	filedescriptor string
-	baudrate       uint16
-	data           []byte
+	filename string
+	baudrate uint16
+	data     []byte
 }
 
-func NewConnection(file string, baudrate uint16) (*Uart, error) {
+func NewConnection(filename string, baudrate uint16) (*Uart, error) {
 	var data []byte
-	uart := &Uart{file, baudrate, data}
-	_, err := os.Stat(file)
+	uart := &Uart{filename, baudrate, data}
+	_, err := os.Stat(filename)
 	if err != nil {
+		logrus.Fatal("file descriptor does not exist")
 		return nil, err
 	}
 	return uart, nil
 }
 
 // Print the file descriptor
-func (uart *Uart) GetFileDescriptor() (string, error) {
-	fileinfo, err := os.Stat(uart.filedescriptor)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	return fileinfo.Name(), nil
-
+func (uart *Uart) GetFileDescriptor() string {
+	return uart.filename
 }
 
 // open a file descriptor and poll the file
