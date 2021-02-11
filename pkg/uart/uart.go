@@ -6,11 +6,12 @@ import (
 )
 
 type Uart struct {
-	filename string
-	baudrate uint16
-	data     []byte
+	fileDescriptor string
+	baudrate       uint16
+	data           []byte
 }
 
+// NewConnection: describe how
 func NewConnection(filename string, baudrate uint16) (*Uart, error) {
 	var data []byte
 	uart := &Uart{filename, baudrate, data}
@@ -24,7 +25,7 @@ func NewConnection(filename string, baudrate uint16) (*Uart, error) {
 
 // Print the file descriptor
 func (uart *Uart) GetFileDescriptor() string {
-	return uart.filename
+	return uart.fileDescriptor
 }
 
 // open a file descriptor and poll the file
