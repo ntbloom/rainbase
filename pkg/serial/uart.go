@@ -1,3 +1,4 @@
+// Package serial controls serial communication over UART
 package serial
 
 import (
