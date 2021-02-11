@@ -14,7 +14,7 @@ type Uart struct {
 	file     *os.File
 }
 
-// NewConnection: create a new serial connection with a unix-style file descriptor
+// NewConnection: create a new serial connection with a unix filename
 func NewConnection(port string, baudrate uint16) (*Uart, error) {
 	var data []byte
 
@@ -47,8 +47,6 @@ func (uart *Uart) Close() {
 func (uart *Uart) GetFileDescriptor() string {
 	return uart.port
 }
-
-// open a file descriptor and poll the file
 
 // process rain event
 
