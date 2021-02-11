@@ -1,0 +1,3 @@
+# specify a valid port
+port: /dev/ttyACM99
+baudrate: 9600

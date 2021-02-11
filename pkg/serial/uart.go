@@ -7,29 +7,29 @@ import (
 )
 
 type Uart struct {
-	fileDescriptor string
-	baudrate       uint16
-	data           []byte
-	file           *os.File
+	port     string
+	baudrate uint16
+	data     []byte
+	file     *os.File
 }
 
 // NewConnection: create a new serial connection with a unix-style file descriptor
-func NewConnection(filename string, baudrate uint16) (*Uart, error) {
+func NewConnection(port string, baudrate uint16) (*Uart, error) {
 	var data []byte
 
-	_, err := os.Stat(filename)
+	_, err := os.Stat(port)
 	if err != nil {
-		logrus.Errorf("file descriptor %s does not exist", filename)
+		logrus.Errorf("file descriptor %s does not exist", port)
 		return nil, err
 	}
 
-	open, err := os.Open(filename)
+	open, err := os.Open(port)
 	if err != nil {
-		logrus.Errorf("problem opening file at %s: %s", filename, err)
+		logrus.Errorf("problem opening file at %s: %s", port, err)
 		return nil, err
 	}
 
-	uart := &Uart{filename, baudrate, data, open}
+	uart := &Uart{port, baudrate, data, open}
 
 	return uart, nil
 }
@@ -38,13 +38,13 @@ func NewConnection(filename string, baudrate uint16) (*Uart, error) {
 func (uart *Uart) Close() {
 	err := uart.file.Close()
 	if err != nil {
-		logrus.Errorf("problem closing %s: %s", uart.fileDescriptor, err)
+		logrus.Errorf("problem closing %s: %s", uart.port, err)
 	}
 }
 
 // Print the file descriptor
 func (uart *Uart) GetFileDescriptor() string {
-	return uart.fileDescriptor
+	return uart.port
 }
 
 // open a file descriptor and poll the file

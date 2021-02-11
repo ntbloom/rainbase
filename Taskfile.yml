@@ -4,7 +4,7 @@ tasks:
   build:
     desc: Build the rainbase binary
     cmds:
-      - go build -v cmd/rainbase.go
+      - go build -v rainbase.go
 
   lint:
     desc: Run golangci-lint on the repo
