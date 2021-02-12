@@ -1,3 +1,6 @@
 # specify a valid port and baudrate
 port: /dev/ttyACM99
 baudrate: 9600  # probably not necessary since we're over USB
+
+logger:
+  level: debug

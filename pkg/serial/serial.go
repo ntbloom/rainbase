@@ -1,4 +1,4 @@
-// Package serial controls serial communication over UART
+// Package serial controls serial communication over USB
 package serial
 
 import (
@@ -9,7 +9,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// tags for TLV packets
+// tags for TLV packets, uint8 numbers coded in ASCII
 const (
 	rain        = 48
 	temperature = 49
@@ -57,14 +57,10 @@ func (uart *Uart) Close() {
 	}
 }
 
-// GetFileDescriptor: print the file descriptor
-func (uart *Uart) GetFileDescriptor() string {
-	return uart.port
-}
-
 // ReadFile: read the file contents
 func (uart *Uart) ReadFile() error {
-	logrus.Debugf("reading from file %s", uart.port)
+	logrus.Tracef("reading from file %s", uart.port)
+
 	bufLength := 7
 	buf := make([]byte, bufLength)
 	_, err := uart.file.Read(buf)
@@ -72,6 +68,7 @@ func (uart *Uart) ReadFile() error {
 		logrus.Errorf("unable to open %s: %s", uart.port, err)
 		return err
 	}
+
 	tag := buf[0]
 	logrus.Debugf("tag=%d", tag)
 	var name string
@@ -97,6 +94,7 @@ func (uart *Uart) ReadFile() error {
 	default:
 		logrus.Error("unsupported tag")
 	}
+
 	length, err := strconv.Atoi(string(buf[1]))
 	if err != nil {
 		logrus.Errorf("bad atoi conversion: %d", length)
@@ -107,11 +105,11 @@ func (uart *Uart) ReadFile() error {
 	}
 
 	// print the tag and value
-	fmt.Printf("tag=%s\nvalue=", name)
+	fmt.Printf("\ntag=%s\nvalue=", name)
 	for _, v := range val {
 		fmt.Printf("%s", string(v))
 	}
-	fmt.Print("\n\n")
+	fmt.Print("\n")
 	return nil
 }
 

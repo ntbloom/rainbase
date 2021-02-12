@@ -18,8 +18,19 @@ func getUartConfig() {
 	}
 }
 
+func setLogger() {
+	level, err := logrus.ParseLevel(viper.GetString("logger.level"))
+	if err != nil {
+		logrus.SetLevel(logrus.InfoLevel)
+	} else {
+		logrus.SetLevel(level)
+	}
+	logrus.Infof("logger set to %s level", logrus.GetLevel())
+}
+
 func main() {
 	getUartConfig()
+	setLogger()
 
 	port := viper.GetString("port")
 	baudrate := uint16(viper.GetInt("baudrate"))
