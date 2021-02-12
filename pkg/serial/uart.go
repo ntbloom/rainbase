@@ -2,7 +2,9 @@
 package serial
 
 import (
+	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/sirupsen/logrus"
 )
@@ -43,9 +45,37 @@ func (uart *Uart) Close() {
 	}
 }
 
-// Print the file descriptor
+// GetFileDescriptor: print the file descriptor
 func (uart *Uart) GetFileDescriptor() string {
 	return uart.port
+}
+
+// ReadFile: read the file contents
+func (uart *Uart) ReadFile() error {
+	bufLength := 10
+	buf := make([]byte, bufLength)
+	_, err := uart.file.Read(buf)
+	if err != nil {
+		logrus.Errorf("problem reading %s: %s", uart.port, err)
+		return err
+	}
+	tag := buf[0]
+	length, err := strconv.Atoi(string(buf[1]))
+	if err != nil {
+		logrus.Errorf("bad conversion: %d", length)
+	}
+	val := make([]byte, length)
+	for i := 0; i < length; i++ {
+		val[i] = buf[2+i]
+	}
+
+	// print the tag and value
+	fmt.Printf("tag=%d\nvalue=", tag)
+	for _, v := range val {
+		fmt.Printf("%s", string(v))
+	}
+	fmt.Print("\n")
+	return nil
 }
 
 // process rain event

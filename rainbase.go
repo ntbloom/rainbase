@@ -29,6 +29,17 @@ func main() {
 		logrus.Fatal(err)
 	}
 	defer uart.Close()
-
 	fmt.Println(uart.GetFileDescriptor())
+	rounds := 0
+	errs := 0
+	for rounds < 10 {
+		if errs > 5 {
+			break
+		}
+		err := uart.ReadFile()
+		if err != nil {
+			errs++
+		}
+		rounds--
+	}
 }
