@@ -9,6 +9,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// tags for TLV packets
+const (
+	rain        = 48
+	temperature = 49
+	softReset   = 50
+	hardReset   = 51
+	pause       = 52
+	unpause     = 53
+)
+
 type Uart struct {
 	port     string
 	baudrate uint16
@@ -18,6 +28,7 @@ type Uart struct {
 
 // NewConnection: create a new serial connection with a unix filename
 func NewConnection(port string, baudrate uint16) (*Uart, error) {
+	logrus.Debugf("opening connection on %s", port)
 	var data []byte
 
 	_, err := os.Stat(port)
@@ -39,6 +50,7 @@ func NewConnection(port string, baudrate uint16) (*Uart, error) {
 
 // Close: close the serial connection
 func (uart *Uart) Close() {
+	logrus.Debugf("closing file %s", uart.port)
 	err := uart.file.Close()
 	if err != nil {
 		logrus.Errorf("problem closing %s: %s", uart.port, err)
@@ -52,17 +64,42 @@ func (uart *Uart) GetFileDescriptor() string {
 
 // ReadFile: read the file contents
 func (uart *Uart) ReadFile() error {
-	bufLength := 10
+	logrus.Debugf("reading from file %s", uart.port)
+	bufLength := 7
 	buf := make([]byte, bufLength)
 	_, err := uart.file.Read(buf)
 	if err != nil {
-		logrus.Errorf("problem reading %s: %s", uart.port, err)
+		logrus.Errorf("unable to open %s: %s", uart.port, err)
 		return err
 	}
 	tag := buf[0]
+	logrus.Debugf("tag=%d", tag)
+	var name string
+	switch tag {
+	case rain:
+		name = "rain"
+		go uart.HandleRain()
+	case temperature:
+		name = "temperature"
+		go uart.HandleTemp()
+	case softReset:
+		name = "soft reset"
+		go uart.HandleSoftReset()
+	case hardReset:
+		name = "hard reset"
+		go uart.HandleHardReset()
+	case pause:
+		name = "pause"
+		go uart.HandlePause()
+	case unpause:
+		name = "unpause"
+		go uart.HandleUnpause()
+	default:
+		logrus.Error("unsupported tag")
+	}
 	length, err := strconv.Atoi(string(buf[1]))
 	if err != nil {
-		logrus.Errorf("bad conversion: %d", length)
+		logrus.Errorf("bad atoi conversion: %d", length)
 	}
 	val := make([]byte, length)
 	for i := 0; i < length; i++ {
@@ -70,22 +107,40 @@ func (uart *Uart) ReadFile() error {
 	}
 
 	// print the tag and value
-	fmt.Printf("tag=%d\nvalue=", tag)
+	fmt.Printf("tag=%s\nvalue=", name)
 	for _, v := range val {
 		fmt.Printf("%s", string(v))
 	}
-	fmt.Print("\n")
+	fmt.Print("\n\n")
 	return nil
 }
 
-// process rain event
+// HandleRain: process rain event
+func (uart *Uart) HandleRain() {
+	logrus.Debug("calling HandleRain")
+}
 
-// process temperature event
+// HandleTemp: process temperature measurement
+func (uart *Uart) HandleTemp() {
+	logrus.Debug("calling HandleTemp")
+}
 
-// process soft reset
+// HandleSoftReset: process soft reset
+func (uart *Uart) HandleSoftReset() {
+	logrus.Debug("calling HandleSoftReset")
+}
 
-// process hard reset
+// HandleHardReset: process hard reset
+func (uart *Uart) HandleHardReset() {
+	logrus.Debug("calling HandleHardReset")
+}
 
-// process pause
+// HandlePause: process pause
+func (uart *Uart) HandlePause() {
+	logrus.Debug("calling HandlePause")
+}
 
-// process unpause
+// HandleUnpause: process unpause
+func (uart *Uart) HandleUnpause() {
+	logrus.Debug("calling HandleUnpause")
+}

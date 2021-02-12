@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"rainbase/pkg/serial"
 
 	"github.com/sirupsen/logrus"
@@ -29,17 +28,11 @@ func main() {
 		logrus.Fatal(err)
 	}
 	defer uart.Close()
-	fmt.Println(uart.GetFileDescriptor())
-	rounds := 0
-	errs := 0
-	for rounds < 10 {
-		if errs > 5 {
-			break
-		}
-		err := uart.ReadFile()
+
+	for i := 0; i < 10; i++ {
+		err = uart.ReadFile()
 		if err != nil {
-			errs++
+			logrus.Fatal("need to handle arduino resetting")
 		}
-		rounds--
 	}
 }
