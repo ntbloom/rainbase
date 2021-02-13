@@ -49,17 +49,13 @@ func main() {
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	defer conn.Close()
 
-	// main loop with interrupt channel; needs refactoring
-	signal := make(chan int)
-	go conn.GetMessage(signal)
-	length := 3
-	for i := 0; i < length; i++ {
-		logrus.Infof("sleep #%d", i)
+	// main loop with interrupt channel; for now just closing after certain time
+	duration := 10
+	go conn.GetMessage()
+	for i := 0; i < duration; i++ {
 		time.Sleep(time.Second)
 	}
-	logrus.Infof("reaching the end")
-	signal <- 2
+	conn.State <- serial.Closed
 
 }

@@ -18,12 +18,18 @@ const (
 	unpause     = 53
 )
 
+const (
+	Open   = 1
+	Closed = 2
+)
+
 type Serial struct {
 	port         string
 	baudrate     uint16
 	maxPacketLen int
 	data         []byte
 	file         *os.File
+	State        chan uint8
 }
 
 // NewConnection: create a new serial connection with a unix filename
@@ -43,7 +49,8 @@ func NewConnection(port string, baudrate uint16, maxPacketLen int) (*Serial, err
 		return nil, err
 	}
 
-	uart := &Serial{port, baudrate, maxPacketLen, data, file}
+	state := make(chan uint8)
+	uart := &Serial{port, baudrate, maxPacketLen, data, file, state}
 
 	return uart, nil
 }
@@ -58,7 +65,7 @@ func (serial *Serial) Close() {
 }
 
 // GetMessage: read the file contents
-func (serial *Serial) GetMessage(signal chan int) {
+func (serial *Serial) GetMessage() {
 	logrus.Tracef("reading contents of file at %s", serial.port)
 
 	for {
@@ -101,9 +108,10 @@ func (serial *Serial) GetMessage(signal chan int) {
 			logrus.Error("unsupported tag")
 		}
 		select {
-		case run := <-signal:
-			if run == 2 {
-				logrus.Debug("breaking from signal")
+		case state := <-serial.State:
+			if state == Closed {
+				logrus.Debug("received `Closed` signal")
+				serial.Close()
 				break
 			}
 		default:
@@ -111,9 +119,6 @@ func (serial *Serial) GetMessage(signal chan int) {
 		}
 		return
 	}
-}
-
-func printBuf(buf []byte, length int) {
 }
 
 // HandleRain: process rain event
