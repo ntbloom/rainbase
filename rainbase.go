@@ -41,21 +41,28 @@ func getSerialConnection() (*serial.Serial, error) {
 	return conn, err
 }
 
-func main() {
-	getConfig()
-	setLogger()
-
+// run main loop for number of seconds or indefinitely
+func listen(duration int) {
 	conn, err := getSerialConnection()
 	if err != nil {
 		logrus.Fatal(err)
 	}
 
-	// main loop with interrupt channel; for now just closing after certain time
-	duration := 10
 	go conn.GetMessage()
-	for i := 0; i < duration; i++ {
-		time.Sleep(time.Second)
+	if duration > 0 {
+		for i := 0; i < duration; i++ {
+			time.Sleep(time.Second)
+		}
+		conn.State <- serial.Closed
 	}
-	conn.State <- serial.Closed
+}
+
+func main() {
+	getConfig()
+	setLogger()
+
+	// run the main listening loop
+	duration := 10
+	listen(duration)
 
 }
