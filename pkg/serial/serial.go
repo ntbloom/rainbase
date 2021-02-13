@@ -58,49 +58,59 @@ func (serial *Serial) Close() {
 }
 
 // GetMessage: read the file contents
-func (serial *Serial) GetMessage() error {
+func (serial *Serial) GetMessage(signal chan int) {
 	logrus.Tracef("reading contents of file at %s", serial.port)
 
-	packet := make([]byte, serial.maxPacketLen)
-	_, err := serial.file.Read(packet)
-	if err != nil {
-		logrus.Errorf("unable to open %s: %s", serial.port, err)
-		return err
-	}
+	for {
+		packet := make([]byte, serial.maxPacketLen)
+		_, err := serial.file.Read(packet)
+		if err != nil {
+			logrus.Errorf("unable to open %s: %s", serial.port, err)
+			return
+		}
 
-	tag := packet[0]
-	length, err := strconv.Atoi(string(packet[1]))
-	if err != nil {
-		logrus.Errorf("bad atoi conversion: %d", length)
-		return err
-	}
-	value := make([]byte, length)
-	for i := 0; i < length; i++ {
-		value[i] = packet[2+i]
-	}
-	logrus.Debugf("packet=%s", string(packet))
-	logrus.Debugf("tag=%d", tag)
-	logrus.Debugf("length=%d", length)
-	logrus.Debugf("value=%d", value)
+		tag := packet[0]
+		length, err := strconv.Atoi(string(packet[1]))
+		if err != nil {
+			logrus.Errorf("bad atoi conversion: %d", length)
+			return
+		}
+		value := make([]byte, length)
+		for i := 0; i < length; i++ {
+			value[i] = packet[2+i]
+		}
+		logrus.Debugf("packet=%s", string(packet))
+		logrus.Debugf("tag=%d", tag)
+		logrus.Debugf("length=%d", length)
+		logrus.Debugf("value=%d", value)
 
-	switch tag {
-	case rain:
-		go serial.HandleRain()
-	case temperature:
-		go serial.HandleTemp(value)
-	case softReset:
-		go serial.HandleSoftReset()
-	case hardReset:
-		go serial.HandleHardReset()
-	case pause:
-		go serial.HandlePause()
-	case unpause:
-		go serial.HandleUnpause()
-	default:
-		logrus.Error("unsupported tag")
+		switch tag {
+		case rain:
+			go serial.HandleRain()
+		case temperature:
+			go serial.HandleTemp(value)
+		case softReset:
+			go serial.HandleSoftReset()
+		case hardReset:
+			go serial.HandleHardReset()
+		case pause:
+			go serial.HandlePause()
+		case unpause:
+			go serial.HandleUnpause()
+		default:
+			logrus.Error("unsupported tag")
+		}
+		select {
+		case run := <-signal:
+			if run == 2 {
+				logrus.Debug("breaking from signal")
+				break
+			}
+		default:
+			continue
+		}
+		return
 	}
-
-	return nil
 }
 
 func printBuf(buf []byte, length int) {
@@ -114,7 +124,7 @@ func (serial *Serial) HandleRain() {
 // HandleTemp: process temperature measurement
 func (serial *Serial) HandleTemp(value []byte) {
 	logrus.Debug("calling HandleTemp")
-	logrus.Errorf("write code to process %d", value)
+	logrus.Debugf("write code to process %d", value)
 }
 
 // HandleSoftReset: process soft reset

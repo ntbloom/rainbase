@@ -2,6 +2,7 @@ package main
 
 import (
 	"rainbase/pkg/serial"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -50,11 +51,15 @@ func main() {
 	}
 	defer conn.Close()
 
-	// main loop, will need a refactor
-	for i := 0; i < 3; i++ {
-		err = conn.GetMessage()
-		if err != nil {
-			logrus.Fatal("need to handle arduino resetting")
-		}
+	// main loop with interrupt channel; needs refactoring
+	signal := make(chan int)
+	go conn.GetMessage(signal)
+	length := 3
+	for i := 0; i < length; i++ {
+		logrus.Infof("sleep #%d", i)
+		time.Sleep(time.Second)
 	}
+	logrus.Infof("reaching the end")
+	signal <- 2
+
 }
