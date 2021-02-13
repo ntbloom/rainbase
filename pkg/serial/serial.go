@@ -2,7 +2,6 @@
 package serial
 
 import (
-	"fmt"
 	"os"
 	"strconv"
 
@@ -19,23 +18,17 @@ const (
 	unpause     = 53
 )
 
-// signals for serial channel
-const (
-	stop  = 1
-	start = 2
-)
-
 type Serial struct {
-	port     string
-	baudrate uint16
-	data     []byte
-	file     *os.File
-	signal   chan uint8
+	port         string
+	baudrate     uint16
+	maxPacketLen int
+	data         []byte
+	file         *os.File
 }
 
 // NewConnection: create a new serial connection with a unix filename
-func NewConnection(port string, baudrate uint16) (*Serial, error) {
-	logrus.Debugf("opening connection on %s", port)
+func NewConnection(port string, baudrate uint16, maxPacketLen int) (*Serial, error) {
+	logrus.Infof("opening connection on %s", port)
 	var data []byte
 
 	_, err := os.Stat(port)
@@ -44,81 +37,73 @@ func NewConnection(port string, baudrate uint16) (*Serial, error) {
 		return nil, err
 	}
 
-	open, err := os.Open(port)
+	file, err := os.Open(port)
 	if err != nil {
-		logrus.Errorf("problem opening file at %s: %s", port, err)
+		logrus.Errorf("problem opening port %s: %s", port, err)
 		return nil, err
 	}
 
-	signal := make(chan uint8)
-	uart := &Serial{port, baudrate, data, open, signal}
+	uart := &Serial{port, baudrate, maxPacketLen, data, file}
 
 	return uart, nil
 }
 
 // Close: close the serial connection
 func (serial *Serial) Close() {
-	logrus.Debugf("closing file %s", serial.port)
+	logrus.Infof("closing serial port %s", serial.port)
 	err := serial.file.Close()
 	if err != nil {
 		logrus.Errorf("problem closing %s: %s", serial.port, err)
 	}
 }
 
-// Loop: read the file contents
-func (serial *Serial) Loop() error {
-	logrus.Tracef("reading from file %s", serial.port)
+// GetMessage: read the file contents
+func (serial *Serial) GetMessage() error {
+	logrus.Tracef("reading contents of file at %s", serial.port)
 
-	bufLength := 7
-	buf := make([]byte, bufLength)
-	_, err := serial.file.Read(buf)
+	packet := make([]byte, serial.maxPacketLen)
+	_, err := serial.file.Read(packet)
 	if err != nil {
 		logrus.Errorf("unable to open %s: %s", serial.port, err)
 		return err
 	}
 
-	tag := buf[0]
+	tag := packet[0]
+	length, err := strconv.Atoi(string(packet[1]))
+	if err != nil {
+		logrus.Errorf("bad atoi conversion: %d", length)
+		return err
+	}
+	value := make([]byte, length)
+	for i := 0; i < length; i++ {
+		value[i] = packet[2+i]
+	}
+	logrus.Debugf("packet=%s", string(packet))
 	logrus.Debugf("tag=%d", tag)
-	var name string
+	logrus.Debugf("length=%d", length)
+	logrus.Debugf("value=%d", value)
+
 	switch tag {
 	case rain:
-		name = "rain"
 		go serial.HandleRain()
 	case temperature:
-		name = "temperature"
-		go serial.HandleTemp()
+		go serial.HandleTemp(value)
 	case softReset:
-		name = "soft reset"
 		go serial.HandleSoftReset()
 	case hardReset:
-		name = "hard reset"
 		go serial.HandleHardReset()
 	case pause:
-		name = "pause"
 		go serial.HandlePause()
 	case unpause:
-		name = "unpause"
 		go serial.HandleUnpause()
 	default:
 		logrus.Error("unsupported tag")
 	}
 
-	length, err := strconv.Atoi(string(buf[1]))
-	if err != nil {
-		logrus.Errorf("bad atoi conversion: %d", length)
-	}
-	val := make([]byte, length)
-	for i := 0; i < length; i++ {
-		val[i] = buf[2+i]
-	}
-
-	// print the tag and value
-	fmt.Printf("\ntag=%s\nvalue=", name)
-	for _, v := range val {
-		fmt.Printf("%s", string(v))
-	}
-	fmt.Print("\n")
 	return nil
+}
+
+func printBuf(buf []byte, length int) {
 }
 
 // HandleRain: process rain event
@@ -127,8 +112,9 @@ func (serial *Serial) HandleRain() {
 }
 
 // HandleTemp: process temperature measurement
-func (serial *Serial) HandleTemp() {
+func (serial *Serial) HandleTemp(value []byte) {
 	logrus.Debug("calling HandleTemp")
+	logrus.Errorf("write code to process %d", value)
 }
 
 // HandleSoftReset: process soft reset
