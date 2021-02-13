@@ -25,7 +25,6 @@ const (
 
 type Serial struct {
 	port         string
-	baudrate     uint16
 	maxPacketLen int
 	data         []byte
 	file         *os.File
@@ -33,7 +32,7 @@ type Serial struct {
 }
 
 // NewConnection: create a new serial connection with a unix filename
-func NewConnection(port string, baudrate uint16, maxPacketLen int) (*Serial, error) {
+func NewConnection(port string, maxPacketLen int) (*Serial, error) {
 	logrus.Infof("opening connection on %s", port)
 	var data []byte
 
@@ -50,7 +49,7 @@ func NewConnection(port string, baudrate uint16, maxPacketLen int) (*Serial, err
 	}
 
 	state := make(chan uint8)
-	uart := &Serial{port, baudrate, maxPacketLen, data, file, state}
+	uart := &Serial{port, maxPacketLen, data, file, state}
 
 	return uart, nil
 }

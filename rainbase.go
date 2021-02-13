@@ -35,7 +35,6 @@ func setLogger() {
 func getSerialConnection() (*serial.Serial, error) {
 	conn, err := serial.NewConnection(
 		viper.GetString("port"),
-		uint16(viper.GetInt("baudrate")),
 		viper.GetInt("maxPacketLen"),
 	)
 	return conn, err
