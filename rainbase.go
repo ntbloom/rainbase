@@ -7,7 +7,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-func getUartConfig() {
+// process config files
+func getConfig() {
 	viper.SetConfigName("arduino")
 	viper.AddConfigPath("./config/")
 	// add additional config locations for prod
@@ -18,6 +19,7 @@ func getUartConfig() {
 	}
 }
 
+// set the logger level
 func setLogger() {
 	level, err := logrus.ParseLevel(viper.GetString("logger.level"))
 	if err != nil {
@@ -29,19 +31,19 @@ func setLogger() {
 }
 
 func main() {
-	getUartConfig()
+	getConfig()
 	setLogger()
 
-	port := viper.GetString("port")
-	baudrate := uint16(viper.GetInt("baudrate"))
-	uart, err := serial.NewConnection(port, baudrate)
+	// open a new serial connection
+	conn, err := serial.NewConnection(viper.GetString("port"), uint16(viper.GetInt("baudrate")))
 	if err != nil {
 		logrus.Fatal(err)
 	}
-	defer uart.Close()
+	defer conn.Close()
 
+	// main loop, will need a refactor
 	for i := 0; i < 10; i++ {
-		err = uart.ReadFile()
+		err = conn.Loop()
 		if err != nil {
 			logrus.Fatal("need to handle arduino resetting")
 		}

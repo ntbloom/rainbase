@@ -19,15 +19,22 @@ const (
 	unpause     = 53
 )
 
-type Uart struct {
+// signals for serial channel
+const (
+	stop  = 1
+	start = 2
+)
+
+type Serial struct {
 	port     string
 	baudrate uint16
 	data     []byte
 	file     *os.File
+	signal   chan uint8
 }
 
 // NewConnection: create a new serial connection with a unix filename
-func NewConnection(port string, baudrate uint16) (*Uart, error) {
+func NewConnection(port string, baudrate uint16) (*Serial, error) {
 	logrus.Debugf("opening connection on %s", port)
 	var data []byte
 
@@ -43,29 +50,30 @@ func NewConnection(port string, baudrate uint16) (*Uart, error) {
 		return nil, err
 	}
 
-	uart := &Uart{port, baudrate, data, open}
+	signal := make(chan uint8)
+	uart := &Serial{port, baudrate, data, open, signal}
 
 	return uart, nil
 }
 
 // Close: close the serial connection
-func (uart *Uart) Close() {
-	logrus.Debugf("closing file %s", uart.port)
-	err := uart.file.Close()
+func (serial *Serial) Close() {
+	logrus.Debugf("closing file %s", serial.port)
+	err := serial.file.Close()
 	if err != nil {
-		logrus.Errorf("problem closing %s: %s", uart.port, err)
+		logrus.Errorf("problem closing %s: %s", serial.port, err)
 	}
 }
 
-// ReadFile: read the file contents
-func (uart *Uart) ReadFile() error {
-	logrus.Tracef("reading from file %s", uart.port)
+// Loop: read the file contents
+func (serial *Serial) Loop() error {
+	logrus.Tracef("reading from file %s", serial.port)
 
 	bufLength := 7
 	buf := make([]byte, bufLength)
-	_, err := uart.file.Read(buf)
+	_, err := serial.file.Read(buf)
 	if err != nil {
-		logrus.Errorf("unable to open %s: %s", uart.port, err)
+		logrus.Errorf("unable to open %s: %s", serial.port, err)
 		return err
 	}
 
@@ -75,22 +83,22 @@ func (uart *Uart) ReadFile() error {
 	switch tag {
 	case rain:
 		name = "rain"
-		go uart.HandleRain()
+		go serial.HandleRain()
 	case temperature:
 		name = "temperature"
-		go uart.HandleTemp()
+		go serial.HandleTemp()
 	case softReset:
 		name = "soft reset"
-		go uart.HandleSoftReset()
+		go serial.HandleSoftReset()
 	case hardReset:
 		name = "hard reset"
-		go uart.HandleHardReset()
+		go serial.HandleHardReset()
 	case pause:
 		name = "pause"
-		go uart.HandlePause()
+		go serial.HandlePause()
 	case unpause:
 		name = "unpause"
-		go uart.HandleUnpause()
+		go serial.HandleUnpause()
 	default:
 		logrus.Error("unsupported tag")
 	}
@@ -114,31 +122,31 @@ func (uart *Uart) ReadFile() error {
 }
 
 // HandleRain: process rain event
-func (uart *Uart) HandleRain() {
+func (serial *Serial) HandleRain() {
 	logrus.Debug("calling HandleRain")
 }
 
 // HandleTemp: process temperature measurement
-func (uart *Uart) HandleTemp() {
+func (serial *Serial) HandleTemp() {
 	logrus.Debug("calling HandleTemp")
 }
 
 // HandleSoftReset: process soft reset
-func (uart *Uart) HandleSoftReset() {
+func (serial *Serial) HandleSoftReset() {
 	logrus.Debug("calling HandleSoftReset")
 }
 
 // HandleHardReset: process hard reset
-func (uart *Uart) HandleHardReset() {
+func (serial *Serial) HandleHardReset() {
 	logrus.Debug("calling HandleHardReset")
 }
 
 // HandlePause: process pause
-func (uart *Uart) HandlePause() {
+func (serial *Serial) HandlePause() {
 	logrus.Debug("calling HandlePause")
 }
 
 // HandleUnpause: process unpause
-func (uart *Uart) HandleUnpause() {
+func (serial *Serial) HandleUnpause() {
 	logrus.Debug("calling HandleUnpause")
 }
