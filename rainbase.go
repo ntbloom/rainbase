@@ -64,5 +64,4 @@ func main() {
 	// run the main listening loop
 	duration := 10
 	listen(duration)
-
 }
