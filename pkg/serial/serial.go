@@ -36,7 +36,7 @@ type Serial struct {
 }
 
 // NewConnection: create a new serial connection with a unix filename
-func NewConnection(port string, packetLenMax int, timeout time.Duration) (*Serial, error) {
+func NewConnection(port string, maxPacketLen int, timeout time.Duration) (*Serial, error) {
 	checkPortStatus(port, timeout)
 	logrus.Infof("opening connection on %s", port)
 	var data []byte
@@ -53,7 +53,7 @@ func NewConnection(port string, packetLenMax int, timeout time.Duration) (*Seria
 
 	uart := &Serial{
 		port,
-		packetLenMax,
+		maxPacketLen,
 		timeout,
 		data,
 		file,
@@ -178,7 +178,7 @@ func (serial *Serial) HandleRain() {
 // HandleTemp: process temperature measurement
 func (serial *Serial) HandleTemp(value []byte) {
 	logrus.Debug("calling HandleTemp")
-	logrus.Debugf("write code to process %d", value)
+	logrus.Tracef("write code to process %d", value)
 }
 
 // HandleSoftReset: process soft reset

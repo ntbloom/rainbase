@@ -1,10 +1,9 @@
-# specify a valid port and baudrate
-port: /dev/ttyACM99
+logger:
+  level: debug
 packet:
   length:
     max: 7
 connection:
+  port: /dev/ttyACM99
   timeout: 5s
 
-logger:
-  level: debug
