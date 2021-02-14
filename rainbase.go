@@ -8,9 +8,13 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	configFile = "rainbase"
+)
+
 // process config files
 func getConfig() {
-	viper.SetConfigName("arduino")
+	viper.SetConfigName(configFile)
 	viper.AddConfigPath("./config/")
 	// add additional config locations for prod
 
@@ -35,7 +39,8 @@ func setLogger() {
 func getSerialConnection() (*serial.Serial, error) {
 	conn, err := serial.NewConnection(
 		viper.GetString("port"),
-		viper.GetInt("maxPacketLen"),
+		viper.GetInt("packet.length.max"),
+		viper.GetDuration("connection.timeout"),
 	)
 	return conn, err
 }
@@ -51,9 +56,11 @@ func listen(duration int) {
 	if duration > 0 {
 		for i := 0; i < duration; i++ {
 			time.Sleep(time.Second)
+			logrus.Tracef("sleep #%d", i+1)
 		}
 		conn.State <- serial.Closed
 	}
+	logrus.Debug("reaching end of listener")
 }
 
 func main() {

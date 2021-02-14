@@ -3,7 +3,9 @@ package serial
 
 import (
 	"os"
+	"rainbase/pkg/exitcodes"
 	"strconv"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -18,6 +20,7 @@ const (
 	unpause     = 53
 )
 
+// uint8 for state of serial port
 const (
 	Open   = 1
 	Closed = 2
@@ -26,21 +29,19 @@ const (
 type Serial struct {
 	port         string
 	maxPacketLen int
+	timeout      time.Duration
 	data         []byte
 	file         *os.File
 	State        chan uint8
 }
 
 // NewConnection: create a new serial connection with a unix filename
-func NewConnection(port string, maxPacketLen int) (*Serial, error) {
+func NewConnection(port string, packetLenMax int, timeout time.Duration) (*Serial, error) {
+	checkPortStatus(port, timeout)
 	logrus.Infof("opening connection on %s", port)
 	var data []byte
 
-	_, err := os.Stat(port)
-	if err != nil {
-		logrus.Errorf("file descriptor %s does not exist", port)
-		return nil, err
-	}
+	// attempt to connect until timeout is exhausted
 
 	file, err := os.Open(port)
 	if err != nil {
@@ -49,7 +50,15 @@ func NewConnection(port string, maxPacketLen int) (*Serial, error) {
 	}
 
 	state := make(chan uint8)
-	uart := &Serial{port, maxPacketLen, data, file, state}
+
+	uart := &Serial{
+		port,
+		packetLenMax,
+		timeout,
+		data,
+		file,
+		state,
+	}
 
 	return uart, nil
 }
@@ -65,14 +74,18 @@ func (serial *Serial) Close() {
 
 // GetMessage: read the file contents
 func (serial *Serial) GetMessage() {
-	logrus.Tracef("reading contents of file at %s", serial.port)
+	checkPortStatus(serial.port, serial.timeout)
 
+	logrus.Tracef("reading contents of file at %s", serial.port)
 	for {
 		packet := make([]byte, serial.maxPacketLen)
 		_, err := serial.file.Read(packet)
 		if err != nil {
-			logrus.Errorf("unable to open %s: %s", serial.port, err)
-			return
+			// connection to file was lost, attempt reconnection
+			logrus.Errorf("error in main read loop, attempting reconnection")
+			checkPortStatus(serial.port, serial.timeout)
+			_ = serial.reopenConnection()
+			continue
 		}
 
 		tag := packet[0]
@@ -118,6 +131,43 @@ func (serial *Serial) GetMessage() {
 		}
 		return
 	}
+}
+
+// checkPortStatus: keep trying to open a file until timeout is up
+func checkPortStatus(port string, timeout time.Duration) {
+	logrus.Debugf("checking if %s exists", port)
+	start := time.Now()
+	for {
+		_, err := os.Stat(port)
+		if err == nil {
+			logrus.Debugf("found port at %s", port)
+			return
+		}
+		logrus.Tracef("file %s doesn't exist on first look, re-checking for %s", port, timeout)
+		if time.Since(start).Milliseconds() > timeout.Milliseconds() {
+			HandlePortFailure(port)
+			return
+		}
+	}
+}
+
+// reopenConnection: get another file descriptor for the port
+func (serial *Serial) reopenConnection() error {
+	file, err := os.Open(serial.port)
+	if err != nil {
+		logrus.Errorf("problem opening %s: %s", serial.port, err)
+		return err
+	}
+	serial.file = file
+	return nil
+}
+
+// HandlePortFailure: what to do when sensor is unresponsive?
+func HandlePortFailure(port string) {
+	logrus.Fatalf("unable to locate sensor at %s", port)
+
+	// for now...
+	os.Exit(exitcodes.SerialPortNotFound)
 }
 
 // HandleRain: process rain event
