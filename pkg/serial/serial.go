@@ -4,7 +4,7 @@ package serial
 import (
 	"os"
 	"rainbase/pkg/exitcodes"
-	"strconv"
+	"rainbase/pkg/tlv"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -87,26 +87,16 @@ func (serial *Serial) GetMessage() {
 			continue
 		}
 
-		tag := packet[0]
-		length, err := strconv.Atoi(string(packet[1]))
+		tlvPacket, err := tlv.NewTLV(packet)
 		if err != nil {
-			logrus.Errorf("bad atoi conversion for length=`%d`", length)
-			return
+			logrus.Errorf("unexpected TLV packet: %s", err)
 		}
-		value := make([]byte, length)
-		for i := 0; i < length; i++ {
-			value[i] = packet[2+i]
-		}
-		logrus.Debugf("packet=%s", string(packet))
-		logrus.Debugf("tag=%d", tag)
-		logrus.Debugf("length=%d", length)
-		logrus.Debugf("value=%d", value)
-
+		tag := tlvPacket.Tag
 		switch tag {
 		case rain:
 			go serial.HandleRain()
 		case temperature:
-			go serial.HandleTemp(value)
+			go serial.HandleTemp(tlvPacket.Value)
 		case softReset:
 			go serial.HandleSoftReset()
 		case hardReset:
