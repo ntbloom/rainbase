@@ -7,6 +7,30 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// Decode from ascii representation of the byte
+func ascii() *map[int]int {
+	ascii := map[int]int{
+		48: 0,
+		49: 1,
+		50: 2,
+		51: 3,
+		52: 4,
+		53: 5,
+		54: 6,
+		55: 7,
+		56: 8,
+		57: 9,
+		65: 10,
+		66: 11,
+		67: 12,
+		68: 13,
+		69: 14,
+		70: 15,
+	}
+	return &ascii
+}
+
+// TLV: tag, length, value encoding for binary packets received over serial
 type TLV struct {
 	Tag    byte
 	Length int
@@ -37,4 +61,9 @@ func NewTLV(packet []byte) (*TLV, error) {
 		value,
 	}
 	return tlv, nil
+}
+
+// ValToInt: convert TLV value to 64-bit integer
+func (tlv *TLV) ValToInt() int64 {
+	return 1
 }
