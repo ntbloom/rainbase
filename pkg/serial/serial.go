@@ -22,8 +22,7 @@ const (
 
 // uint8 for state of serial port
 const (
-	Open   = 1
-	Closed = 2
+	Closed = 1
 )
 
 type Serial struct {
@@ -38,14 +37,14 @@ type Serial struct {
 // NewConnection: create a new serial connection with a unix filename
 func NewConnection(port string, maxPacketLen int, timeout time.Duration) (*Serial, error) {
 	checkPortStatus(port, timeout)
-	logrus.Infof("opening connection on %s", port)
+	logrus.Infof("opening connection on `%s`", port)
 	var data []byte
 
 	// attempt to connect until timeout is exhausted
 
 	file, err := os.Open(port)
 	if err != nil {
-		logrus.Errorf("problem opening port %s: %s", port, err)
+		logrus.Errorf("problem opening port `%s`: %s", port, err)
 		return nil, err
 	}
 
@@ -65,10 +64,10 @@ func NewConnection(port string, maxPacketLen int, timeout time.Duration) (*Seria
 
 // Close: close the serial connection
 func (serial *Serial) Close() {
-	logrus.Infof("closing serial port %s", serial.port)
+	logrus.Infof("closing serial port `%s`", serial.port)
 	err := serial.file.Close()
 	if err != nil {
-		logrus.Errorf("problem closing %s: %s", serial.port, err)
+		logrus.Errorf("problem closing `%s`: %s", serial.port, err)
 	}
 }
 
@@ -76,13 +75,13 @@ func (serial *Serial) Close() {
 func (serial *Serial) GetMessage() {
 	checkPortStatus(serial.port, serial.timeout)
 
-	logrus.Tracef("reading contents of file at %s", serial.port)
+	logrus.Tracef("reading contents of `%s`", serial.port)
 	for {
 		packet := make([]byte, serial.maxPacketLen)
 		_, err := serial.file.Read(packet)
 		if err != nil {
 			// connection to file was lost, attempt reconnection
-			logrus.Errorf("error in main read loop, attempting reconnection")
+			logrus.Infof("connection lost, attempting reconnection")
 			checkPortStatus(serial.port, serial.timeout)
 			_ = serial.reopenConnection()
 			continue
@@ -91,7 +90,7 @@ func (serial *Serial) GetMessage() {
 		tag := packet[0]
 		length, err := strconv.Atoi(string(packet[1]))
 		if err != nil {
-			logrus.Errorf("bad atoi conversion: %d", length)
+			logrus.Errorf("bad atoi conversion for length=`%d`", length)
 			return
 		}
 		value := make([]byte, length)
@@ -117,7 +116,7 @@ func (serial *Serial) GetMessage() {
 		case unpause:
 			go serial.HandleUnpause()
 		default:
-			logrus.Error("unsupported tag")
+			logrus.Errorf("unsupported tag `%d`", tag)
 		}
 		select {
 		case state := <-serial.State:
@@ -135,15 +134,15 @@ func (serial *Serial) GetMessage() {
 
 // checkPortStatus: keep trying to open a file until timeout is up
 func checkPortStatus(port string, timeout time.Duration) {
-	logrus.Debugf("checking if %s exists", port)
+	logrus.Debugf("checking if `%s` exists", port)
 	start := time.Now()
 	for {
 		_, err := os.Stat(port)
 		if err == nil {
-			logrus.Debugf("found port at %s", port)
+			logrus.Debugf("found port `%s`", port)
 			return
 		}
-		logrus.Tracef("file %s doesn't exist on first look, re-checking for %s", port, timeout)
+		logrus.Tracef("file `%s` doesn't exist on first look, re-checking for %s", port, timeout)
 		if time.Since(start).Milliseconds() > timeout.Milliseconds() {
 			HandlePortFailure(port)
 			return
@@ -155,7 +154,7 @@ func checkPortStatus(port string, timeout time.Duration) {
 func (serial *Serial) reopenConnection() error {
 	file, err := os.Open(serial.port)
 	if err != nil {
-		logrus.Errorf("problem opening %s: %s", serial.port, err)
+		logrus.Debugf("port `%s` temporarily down: %s", serial.port, err)
 		return err
 	}
 	serial.file = file
@@ -164,7 +163,7 @@ func (serial *Serial) reopenConnection() error {
 
 // HandlePortFailure: what to do when sensor is unresponsive?
 func HandlePortFailure(port string) {
-	logrus.Fatalf("unable to locate sensor at %s", port)
+	logrus.Fatalf("unable to locate sensor at `%s`", port)
 
 	// for now...
 	os.Exit(exitcodes.SerialPortNotFound)

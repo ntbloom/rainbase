@@ -5,5 +5,5 @@ packet:
     max: 7
 connection:
   port: /dev/ttyACM99
-  timeout: 5s
+  timeout: 10s
 
