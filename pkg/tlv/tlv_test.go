@@ -1,14 +1,13 @@
 package tlv
 
 import (
+	"fmt"
 	"testing"
-
-	"github.com/sirupsen/logrus"
 )
 
 // Test static packets like rain event, etc.
 func TestStaticVals(t *testing.T) {
-	exp := 1
+	var exp int32 = 1
 	rain := []byte{48, 49, 49}
 	if !verifyValToInt(rain, exp) {
 		t.Fail()
@@ -27,48 +26,58 @@ func TestStaticVals(t *testing.T) {
 	}
 }
 
-func TestValToInt(t *testing.T) {
+// Test temperature packets
+func Test18(t *testing.T) {
+	var exp int32 = 1
 	// positives
 	temp1 := []byte{49, 52, 48, 48, 49, 50}
-	exp1 := 18
-	if !verifyValToInt(temp1, exp1) {
+	exp = 18
+	if !verifyValToInt(temp1, exp) {
 		t.Fail()
 	}
+}
+func Test25(t *testing.T) {
 	temp2 := []byte{49, 52, 48, 48, 49, 57}
-	exp2 := 25
-	if !verifyValToInt(temp2, exp2) {
+	var exp int32 = 25
+	if !verifyValToInt(temp2, exp) {
 		t.Fail()
 	}
+}
+func Test26(t *testing.T) {
 	temp3 := []byte{49, 52, 48, 48, 49, 65}
-	exp3 := 26
-	if !verifyValToInt(temp3, exp3) {
-		t.Fail()
-	}
-
-	// zero
-	temp4 := []byte{49, 52, 48, 48, 48, 48}
-	exp4 := 0
-	if !verifyValToInt(temp4, exp4) {
-		t.Fail()
-	}
-
-	// negatives
-	temp5 := []byte{49, 52, 70, 70, 69, 55}
-	exp5 := -24
-	if !verifyValToInt(temp5, exp5) {
+	var exp int32 = 26
+	if !verifyValToInt(temp3, exp) {
 		t.Fail()
 	}
 }
 
-func verifyValToInt(raw []byte, expected int) bool {
+func Test0(t *testing.T) {
+	// zero
+	temp4 := []byte{49, 52, 48, 48, 48, 48}
+	var exp int32 = 0
+	if !verifyValToInt(temp4, exp) {
+		t.Fail()
+	}
+}
+
+func TestMinus24(t *testing.T) {
+	// negatives
+	temp5 := []byte{49, 52, 70, 70, 69, 55}
+	var exp int32 = -24
+	if !verifyValToInt(temp5, exp) {
+		t.Fail()
+	}
+}
+
+func verifyValToInt(raw []byte, expected int32) bool {
 	tlv, err := NewTLV(raw)
 	if tlv == nil {
-		logrus.Errorf("error making tlv: %s", err)
+		fmt.Printf("error making tlv: %s\n", err)
 		return false
 	}
 	actual := tlv.Value
 	if actual != expected {
-		logrus.Errorf("expected=%d, actual=%d", expected, actual)
+		fmt.Printf("expected=%d, actual=%d\n", expected, actual)
 		return false
 	}
 	return true

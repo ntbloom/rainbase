@@ -8,52 +8,56 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// packet length for determining how to process value
+const (
+	constant = 1
+	variable = 4
+)
+
 // decode from ascii representation of the byte
-func asciiToInt(b byte) (int, error) {
-	return strconv.Atoi(string(b))
+func asciiToInt(b byte) int {
+	val, _ := strconv.Atoi(string(b))
+	return val
 }
 
-// decode byte array into single integer
-func byteArrayToInt(b []byte) (int, error) {
-	return -1, nil
+//  concatenate a 4-byte array into a 32-bit integer
+func concatenateBytesToInt(b []byte) int32 {
+	asNums := make([]int32, 4)
+	for idx, val := range b {
+		asNums[idx] = int32(asciiToInt(val))
+	}
+	var value int32 = asNums[0] << 24
+	value = value | (asNums[1] << 16)
+	value = value | (asNums[2] << 4)
+	value = value | (asNums[3])
+	return value
+
 }
 
 // TLV: tag, length, value encoding for binary packets received over serial
 type TLV struct {
 	Tag    int
 	Length int
-	Value  int
+	Value  int32
 }
 
 // NewTLV: make a new TLV packet
 func NewTLV(packet []byte) (*TLV, error) {
 	rawTag := packet[0]
-	tag, err := asciiToInt(rawTag)
-	if err != nil {
-		logrus.Errorf("misreading tag %d", rawTag)
-		return nil, err
-	}
+	tag := asciiToInt(rawTag)
 
 	rawLength := packet[1]
-	length, err := asciiToInt(rawLength)
-	if err != nil {
-		logrus.Errorf("misreading length %d", rawLength)
-		return nil, err
-	}
+	length := asciiToInt(rawLength)
 
-	var value int
+	var value int32
 	switch length {
-	case 1:
+	case constant:
 		// static value, doesn't matter
 		value = 1
-	case 4:
+	case variable:
 		// convert it to an integer
 		rawValue := packet[2:]
-		value, err = byteArrayToInt(rawValue)
-		if err != nil {
-			logrus.Errorf("unable to decode %s", rawValue)
-			return nil, err
-		}
+		value = concatenateBytesToInt(rawValue)
 	default:
 		err := fmt.Errorf("unsupported value %d", value)
 		return nil, err
