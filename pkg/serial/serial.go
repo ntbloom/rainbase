@@ -3,9 +3,10 @@ package serial
 
 import (
 	"os"
-	"rainbase/pkg/exitcodes"
-	"rainbase/pkg/tlv"
 	"time"
+
+	"github.com/ntbloom/rainbase/pkg/exitcodes"
+	"github.com/ntbloom/rainbase/pkg/tlv"
 
 	"github.com/sirupsen/logrus"
 )
@@ -165,7 +166,7 @@ func (serial *Serial) HandleRain() {
 }
 
 // HandleTemp: process temperature measurement
-func (serial *Serial) HandleTemp(value []byte) {
+func (serial *Serial) HandleTemp(value int) {
 	logrus.Debug("calling HandleTemp")
 	logrus.Tracef("write code to process %d", value)
 }

@@ -14,7 +14,7 @@ tasks:
   test:
     desc: Run the test suite
     cmds:
-      - go test
+      - go test pkg/tlv/*
 
   run:
     desc: run the binary

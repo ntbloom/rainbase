@@ -1,8 +1,9 @@
 package main
 
 import (
-	"rainbase/pkg/serial"
 	"time"
+
+	"github.com/ntbloom/rainbase/pkg/serial"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"

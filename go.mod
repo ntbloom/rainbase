@@ -1,4 +1,4 @@
-module rainbase
+module github.com/ntbloom/rainbase
 
 go 1.15
 
