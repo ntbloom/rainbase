@@ -37,8 +37,8 @@ func asciiToInt(b byte) int {
 		53: 5,
 		54: 6,
 		55: 7,
-		58: 8,
-		59: 9,
+		56: 8,
+		57: 9,
 		65: 10,
 		66: 11,
 		67: 12,
@@ -56,9 +56,9 @@ func concatenateBytesToInt(b []byte) int {
 		asNums[idx] = int(asciiToInt(val))
 	}
 	value := asNums[0] << 12
-	value = value | (asNums[1] << 8)
-	value = value | (asNums[2] << 4)
-	value = value | (asNums[3])
+	value |= asNums[1] << 8
+	value |= asNums[2] << 4
+	value |= asNums[3]
 
 	// account for negative numbers
 	if asNums[0] > 0 {
@@ -90,7 +90,7 @@ func NewTLV(packet []byte) (*TLV, error) {
 		value = 1
 	case variable:
 		// convert it to an integer
-		rawValue := packet[2:5] // packet[6] is newline
+		rawValue := packet[2:6] // packet[6] is newline
 		value = concatenateBytesToInt(rawValue)
 	default:
 		err := fmt.Errorf("unsupported value %d", value)

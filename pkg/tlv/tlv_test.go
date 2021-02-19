@@ -30,21 +30,21 @@ func TestStaticVals(t *testing.T) {
 func Test18(t *testing.T) {
 	var exp int = 1
 	// positives
-	temp1 := []byte{49, 52, 48, 48, 49, 50}
+	temp1 := []byte{49, 52, 48, 48, 49, 50, 10}
 	exp = 18
 	if !verifyValToInt(temp1, exp) {
 		t.Fail()
 	}
 }
 func Test25(t *testing.T) {
-	temp2 := []byte{49, 52, 48, 48, 49, 59}
+	temp2 := []byte{49, 52, 48, 48, 49, 57, 10}
 	var exp int = 25
 	if !verifyValToInt(temp2, exp) {
 		t.Fail()
 	}
 }
 func Test26(t *testing.T) {
-	temp3 := []byte{49, 52, 48, 48, 49, 65}
+	temp3 := []byte{49, 52, 48, 48, 49, 65, 10}
 	var exp int = 26
 	if !verifyValToInt(temp3, exp) {
 		t.Fail()
@@ -53,7 +53,7 @@ func Test26(t *testing.T) {
 
 func Test0(t *testing.T) {
 	// zero
-	temp4 := []byte{49, 52, 48, 48, 48, 48}
+	temp4 := []byte{49, 52, 48, 48, 48, 48, 10}
 	var exp int = 0
 	if !verifyValToInt(temp4, exp) {
 		t.Fail()
@@ -62,7 +62,7 @@ func Test0(t *testing.T) {
 
 func TestMinus24(t *testing.T) {
 	// negatives
-	temp5 := []byte{49, 52, 70, 70, 69, 55}
+	temp5 := []byte{49, 52, 70, 70, 69, 55, 10}
 	var exp int = -24
 	if !verifyValToInt(temp5, exp) {
 		t.Fail()
