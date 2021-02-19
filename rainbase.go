@@ -61,7 +61,7 @@ func listen(duration int) {
 		}
 		conn.State <- serial.Closed
 	}
-	logrus.Debug("reaching end of listener")
+	logrus.Error("reaching end of listener, program about to end")
 }
 
 func main() {

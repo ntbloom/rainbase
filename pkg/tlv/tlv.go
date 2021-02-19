@@ -7,6 +7,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// tags for TLV packets
+const (
+	Rain        = 0
+	Temperature = 1
+	SoftReset   = 2
+	HardReset   = 3
+	Pause       = 4
+	Unpause     = 5
+)
+
 // packet length for determining how to process value
 const (
 	constant = 1
@@ -80,16 +90,12 @@ func NewTLV(packet []byte) (*TLV, error) {
 		value = 1
 	case variable:
 		// convert it to an integer
-		rawValue := packet[2:]
+		rawValue := packet[2:5] // packet[6] is newline
 		value = concatenateBytesToInt(rawValue)
 	default:
 		err := fmt.Errorf("unsupported value %d", value)
 		return nil, err
 	}
-	//value := make([]byte, length)
-	//for i := 0; i < length; i++ {
-	//	value[i] = packet[2+i]
-	//}
 
 	logrus.Tracef("packet=%s", string(packet))
 	logrus.Tracef("Tag=%d", tag)

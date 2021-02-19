@@ -11,21 +11,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// tags for TLV packets, uint8 numbers coded in ASCII
-const (
-	rain        = 48
-	temperature = 49
-	softReset   = 50
-	hardReset   = 51
-	pause       = 52
-	unpause     = 53
-)
-
 // uint8 for state of serial port
+const Closed = 1
+
+// temperature values
 const (
-	Closed = 1
+	DegreesF = string("\u00B0F")
+	DegreesC = string("\u00B0C")
 )
 
+// Serial communicates with a serial port
 type Serial struct {
 	port         string
 	maxPacketLen int
@@ -94,21 +89,23 @@ func (serial *Serial) GetMessage() {
 		}
 		tag := tlvPacket.Tag
 		switch tag {
-		case rain:
+		case tlv.Rain:
 			go serial.HandleRain()
-		case temperature:
+		case tlv.Temperature:
 			go serial.HandleTemp(tlvPacket.Value)
-		case softReset:
+		case tlv.SoftReset:
 			go serial.HandleSoftReset()
-		case hardReset:
+		case tlv.HardReset:
 			go serial.HandleHardReset()
-		case pause:
+		case tlv.Pause:
 			go serial.HandlePause()
-		case unpause:
+		case tlv.Unpause:
 			go serial.HandleUnpause()
 		default:
 			logrus.Errorf("unsupported tag `%d`", tag)
 		}
+
+		// run forever until uninterruped by close signal
 		select {
 		case state := <-serial.State:
 			if state == Closed {
@@ -168,7 +165,8 @@ func (serial *Serial) HandleRain() {
 // HandleTemp: process temperature measurement
 func (serial *Serial) HandleTemp(value int) {
 	logrus.Debug("calling HandleTemp")
-	logrus.Tracef("write code to process %d", value)
+	f := ((9 * value) / 5) + 32
+	logrus.Debugf("temp is %d%s/%d%s", value, DegreesC, f, DegreesF)
 }
 
 // HandleSoftReset: process soft reset
