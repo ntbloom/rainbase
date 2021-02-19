@@ -107,7 +107,7 @@ linters:
     - gochecknoglobals
     - gocognit
     - godox
-    - goerr113
+#    - goerr113
     - maligned
     - nestif
     - prealloc

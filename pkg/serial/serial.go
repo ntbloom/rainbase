@@ -105,7 +105,7 @@ func (serial *Serial) GetMessage() {
 			logrus.Errorf("unsupported tag `%d`", tag)
 		}
 
-		// run forever until uninterruped by close signal
+		// run forever until uninterrupted by close signal
 		select {
 		case state := <-serial.State:
 			if state == Closed {

@@ -53,7 +53,7 @@ func asciiToInt(b byte) int {
 func concatenateBytesToInt(b []byte) int {
 	asNums := make([]int, 4)
 	for idx, val := range b {
-		asNums[idx] = int(asciiToInt(val))
+		asNums[idx] = asciiToInt(val)
 	}
 	value := asNums[0] << 12
 	value |= asNums[1] << 8
@@ -65,7 +65,6 @@ func concatenateBytesToInt(b []byte) int {
 		value -= maxInt
 	}
 	return value
-
 }
 
 // TLV: tag, length, value encoding for binary packets received over serial
