@@ -39,11 +39,11 @@ func asciiToInt(b byte) int {
 	return dict[b]
 }
 
-//  concatenate a 4-byte array into a 32-bit integer
-func concatenateBytesToInt(b []byte) int32 {
-	asNums := make([]int32, 4)
+//  concatenate a 4-byte array into its integer equivalent
+func concatenateBytesToInt(b []byte) int {
+	asNums := make([]int, 4)
 	for idx, val := range b {
-		asNums[idx] = int32(asciiToInt(val))
+		asNums[idx] = int(asciiToInt(val))
 	}
 	value := asNums[0] << 12
 	value = value | (asNums[1] << 8)
@@ -62,7 +62,7 @@ func concatenateBytesToInt(b []byte) int32 {
 type TLV struct {
 	Tag    int
 	Length int
-	Value  int32
+	Value  int
 }
 
 // NewTLV: make a new TLV packet
@@ -73,7 +73,7 @@ func NewTLV(packet []byte) (*TLV, error) {
 	rawLength := packet[1]
 	length := asciiToInt(rawLength)
 
-	var value int32
+	var value int
 	switch length {
 	case constant:
 		// static value, doesn't matter

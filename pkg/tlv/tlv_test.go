@@ -7,7 +7,7 @@ import (
 
 // Test static packets like rain event, etc.
 func TestStaticVals(t *testing.T) {
-	var exp int32 = 1
+	var exp int = 1
 	rain := []byte{48, 49, 49}
 	if !verifyValToInt(rain, exp) {
 		t.Fail()
@@ -28,7 +28,7 @@ func TestStaticVals(t *testing.T) {
 
 // Test temperature packets
 func Test18(t *testing.T) {
-	var exp int32 = 1
+	var exp int = 1
 	// positives
 	temp1 := []byte{49, 52, 48, 48, 49, 50}
 	exp = 18
@@ -38,14 +38,14 @@ func Test18(t *testing.T) {
 }
 func Test25(t *testing.T) {
 	temp2 := []byte{49, 52, 48, 48, 49, 59}
-	var exp int32 = 25
+	var exp int = 25
 	if !verifyValToInt(temp2, exp) {
 		t.Fail()
 	}
 }
 func Test26(t *testing.T) {
 	temp3 := []byte{49, 52, 48, 48, 49, 65}
-	var exp int32 = 26
+	var exp int = 26
 	if !verifyValToInt(temp3, exp) {
 		t.Fail()
 	}
@@ -54,7 +54,7 @@ func Test26(t *testing.T) {
 func Test0(t *testing.T) {
 	// zero
 	temp4 := []byte{49, 52, 48, 48, 48, 48}
-	var exp int32 = 0
+	var exp int = 0
 	if !verifyValToInt(temp4, exp) {
 		t.Fail()
 	}
@@ -63,13 +63,13 @@ func Test0(t *testing.T) {
 func TestMinus24(t *testing.T) {
 	// negatives
 	temp5 := []byte{49, 52, 70, 70, 69, 55}
-	var exp int32 = -24
+	var exp int = -24
 	if !verifyValToInt(temp5, exp) {
 		t.Fail()
 	}
 }
 
-func verifyValToInt(raw []byte, expected int32) bool {
+func verifyValToInt(raw []byte, expected int) bool {
 	tlv, err := NewTLV(raw)
 	if tlv == nil {
 		fmt.Printf("error making tlv: %s\n", err)
