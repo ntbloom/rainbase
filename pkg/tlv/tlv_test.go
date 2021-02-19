@@ -37,7 +37,7 @@ func Test18(t *testing.T) {
 	}
 }
 func Test25(t *testing.T) {
-	temp2 := []byte{49, 52, 48, 48, 49, 57}
+	temp2 := []byte{49, 52, 48, 48, 49, 59}
 	var exp int32 = 25
 	if !verifyValToInt(temp2, exp) {
 		t.Fail()

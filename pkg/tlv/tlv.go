@@ -3,7 +3,6 @@ package tlv
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/sirupsen/logrus"
 )
@@ -14,10 +13,30 @@ const (
 	variable = 4
 )
 
+const maxInt = 65535
+
 // decode from ascii representation of the byte
 func asciiToInt(b byte) int {
-	val, _ := strconv.Atoi(string(b))
-	return val
+	// use a hash table for faster lookups than other conversion
+	dict := map[byte]int{
+		48: 0,
+		49: 1,
+		50: 2,
+		51: 3,
+		52: 4,
+		53: 5,
+		54: 6,
+		55: 7,
+		58: 8,
+		59: 9,
+		65: 10,
+		66: 11,
+		67: 12,
+		68: 13,
+		69: 14,
+		70: 15,
+	}
+	return dict[b]
 }
 
 //  concatenate a 4-byte array into a 32-bit integer
@@ -26,10 +45,15 @@ func concatenateBytesToInt(b []byte) int32 {
 	for idx, val := range b {
 		asNums[idx] = int32(asciiToInt(val))
 	}
-	var value int32 = asNums[0] << 24
-	value = value | (asNums[1] << 16)
+	value := asNums[0] << 12
+	value = value | (asNums[1] << 8)
 	value = value | (asNums[2] << 4)
 	value = value | (asNums[3])
+
+	// account for negative numbers
+	if asNums[0] > 0 {
+		value -= maxInt
+	}
 	return value
 
 }
