@@ -16,7 +16,6 @@ import (
 // uint8 for state of serial port
 const Closed = 1
 
-
 // Serial communicates with a serial port
 type Serial struct {
 	port         string
