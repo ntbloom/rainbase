@@ -1,7 +1,10 @@
 *.swp
 .idea/
-rainbase
+.secrets.yml
 
 # mqtt certificates
 *.crt
 *.key
+
+# binaries
+rainbase
