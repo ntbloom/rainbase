@@ -1,3 +1,7 @@
 *.swp
 .idea/
 rainbase
+
+# mqtt certificates
+*.crt
+*.key
