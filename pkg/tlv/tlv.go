@@ -1,4 +1,4 @@
-// Package tlv handles decoding tlv packets into more useful data
+// Package tlv decodes tlv packets into more useful data
 package tlv
 
 import (
@@ -6,6 +6,13 @@ import (
 
 	"github.com/sirupsen/logrus"
 )
+
+// TLV: tag, length, value encoding for binary packets received over serial
+type TLV struct {
+	Tag    int
+	Length int
+	Value  int
+}
 
 // tags for TLV packets
 const (
@@ -65,13 +72,6 @@ func concatenateBytesToInt(b []byte) int {
 		value -= maxInt
 	}
 	return value
-}
-
-// TLV: tag, length, value encoding for binary packets received over serial
-type TLV struct {
-	Tag    int
-	Length int
-	Value  int
 }
 
 // NewTLV: make a new TLV packet

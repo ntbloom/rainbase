@@ -53,7 +53,7 @@ func listen(duration int) {
 		logrus.Fatal(err)
 	}
 
-	go conn.GetMessage()
+	go conn.GetTLV()
 	if duration > 0 {
 		for i := 0; i < duration; i++ {
 			time.Sleep(time.Second)

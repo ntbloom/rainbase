@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/ntbloom/rainbase/pkg/messenger"
+
 	"github.com/ntbloom/rainbase/pkg/exitcodes"
 	"github.com/ntbloom/rainbase/pkg/tlv"
 
@@ -14,11 +16,6 @@ import (
 // uint8 for state of serial port
 const Closed = 1
 
-// temperature values
-const (
-	DegreesF = string("\u00B0F")
-	DegreesC = string("\u00B0C")
-)
 
 // Serial communicates with a serial port
 type Serial struct {
@@ -67,8 +64,8 @@ func (serial *Serial) Close() {
 	}
 }
 
-// GetMessage: read the file contents
-func (serial *Serial) GetMessage() {
+// GetTLV: read the file contents
+func (serial *Serial) GetTLV() {
 	checkPortStatus(serial.port, serial.timeout)
 
 	logrus.Tracef("reading contents of `%s`", serial.port)
@@ -87,23 +84,7 @@ func (serial *Serial) GetMessage() {
 		if err != nil {
 			logrus.Errorf("unexpected TLV packet: %s", err)
 		}
-		tag := tlvPacket.Tag
-		switch tag {
-		case tlv.Rain:
-			go serial.HandleRain()
-		case tlv.Temperature:
-			go serial.HandleTemp(tlvPacket.Value)
-		case tlv.SoftReset:
-			go serial.HandleSoftReset()
-		case tlv.HardReset:
-			go serial.HandleHardReset()
-		case tlv.Pause:
-			go serial.HandlePause()
-		case tlv.Unpause:
-			go serial.HandleUnpause()
-		default:
-			logrus.Errorf("unsupported tag `%d`", tag)
-		}
+		go messenger.Handle(tlvPacket)
 
 		// run forever until uninterrupted by close signal
 		select {
@@ -118,6 +99,14 @@ func (serial *Serial) GetMessage() {
 		}
 		return
 	}
+}
+
+// HandlePortFailure: what to do when sensor is unresponsive?
+func HandlePortFailure(port string) {
+	logrus.Fatalf("unable to locate sensor at `%s`", port)
+
+	// for now...
+	os.Exit(exitcodes.SerialPortNotFound)
 }
 
 // checkPortStatus: keep trying to open a file until timeout is up
@@ -147,44 +136,4 @@ func (serial *Serial) reopenConnection() error {
 	}
 	serial.file = file
 	return nil
-}
-
-// HandlePortFailure: what to do when sensor is unresponsive?
-func HandlePortFailure(port string) {
-	logrus.Fatalf("unable to locate sensor at `%s`", port)
-
-	// for now...
-	os.Exit(exitcodes.SerialPortNotFound)
-}
-
-// HandleRain: process rain event
-func (serial *Serial) HandleRain() {
-	logrus.Debug("calling HandleRain")
-}
-
-// HandleTemp: process temperature measurement
-func (serial *Serial) HandleTemp(value int) {
-	logrus.Debug("calling HandleTemp")
-	f := ((9 * value) / 5) + 32
-	logrus.Debugf("temp is %d%s/%d%s", value, DegreesC, f, DegreesF)
-}
-
-// HandleSoftReset: process soft reset
-func (serial *Serial) HandleSoftReset() {
-	logrus.Debug("calling HandleSoftReset")
-}
-
-// HandleHardReset: process hard reset
-func (serial *Serial) HandleHardReset() {
-	logrus.Debug("calling HandleHardReset")
-}
-
-// HandlePause: process pause
-func (serial *Serial) HandlePause() {
-	logrus.Debug("calling HandlePause")
-}
-
-// HandleUnpause: process unpause
-func (serial *Serial) HandleUnpause() {
-	logrus.Debug("calling HandleUnpause")
 }
