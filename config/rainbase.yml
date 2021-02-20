@@ -1,5 +1,6 @@
 logger:
   level: debug
+
 packet:
   length:
     max: 7
@@ -7,3 +8,9 @@ connection:
   port: /dev/ttyACM99
   timeout: 10s
 
+mqtt:
+  scheme: ssl
+  certs:
+    ca: /etc/rainbase/ssl/ca.crt
+    client: /etc/rainbase/ssl/client.crt
+    key: /etc/rainbase/ssl/client.key
