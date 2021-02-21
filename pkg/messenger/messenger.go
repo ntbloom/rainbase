@@ -1,4 +1,4 @@
-// Package messenger ferries data between serial port, mqtt, and the database
+// Package messenger ferries data between serial port, paho, and the database
 package messenger
 
 import (
