@@ -3,9 +3,13 @@ package paho_test
 import (
 	"testing"
 
-	_ "github.com/ntbloom/rainbase/pkg/paho"
-	_ "github.com/spf13/viper"
+	"github.com/ntbloom/rainbase/pkg/paho"
 )
+
+func pahoFixture() *paho.Connection {
+	//scheme := viper.GetString("mqtt.scheme")
+	return nil
+}
 
 func TestMQTTConnection(t *testing.T) {
 	//t.Fail()

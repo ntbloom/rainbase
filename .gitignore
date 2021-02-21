@@ -1,6 +1,6 @@
 *.swp
 .idea/
-.secrets.yml
+pkg/config/.secrets.yml
 
 # paho certificates
 *.crt
