@@ -1,7 +1,10 @@
 package paho_test
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/ntbloom/rainbase/pkg/config"
 	"github.com/spf13/viper"
@@ -21,11 +24,15 @@ func pahoFixture() *paho.Connection {
 	return paho.NewConnection(scheme, broker, port, caCert, clientCert, clientKey)
 }
 
+// Can
 func TestMQTTConnection(t *testing.T) {
 	conn := pahoFixture()
 	client := *conn.Client
-	client.Connect()
+	token := client.Connect()
+	fmt.Println(token)
+	defer client.Disconnect(1000)
 	if !client.IsConnected() {
+		logrus.Error("failed to connect")
 		t.Fail()
 	}
 }

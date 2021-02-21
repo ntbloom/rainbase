@@ -19,7 +19,7 @@ type Connection struct {
 }
 
 // NewConnection creates a new MQTT connection or error
-func NewConnection(scheme string, broker string, port int, caCert string, clientCert string, clientKey string) *Connection {
+func NewConnection(scheme, broker string, port int, caCert, clientCert, clientKey string) *Connection {
 	server := fmt.Sprintf("%s://%s:%d", scheme, broker, port)
 	logrus.Infof("opening MQTT connection at %s", server)
 	options := mqtt.NewClientOptions()
