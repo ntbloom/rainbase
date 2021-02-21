@@ -3,27 +3,13 @@ package main
 import (
 	"time"
 
+	"github.com/ntbloom/rainbase/pkg/config"
+
 	"github.com/ntbloom/rainbase/pkg/serial"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
-
-const (
-	configFile = "rainbase"
-)
-
-// process config files
-func getConfig() {
-	viper.SetConfigName(configFile)
-	viper.AddConfigPath("./config/")
-	// add additional config locations for prod
-
-	err := viper.ReadInConfig()
-	if err != nil {
-		logrus.Fatal("config not loaded")
-	}
-}
 
 // set the logger level
 func setLogger() {
@@ -65,7 +51,7 @@ func listen(duration int) {
 }
 
 func main() {
-	getConfig()
+	config.GetConfig()
 	setLogger()
 
 	// run the main listening loop

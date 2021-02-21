@@ -26,5 +26,6 @@ func NewConnection(scheme string, broker string, port int) *Connection {
 		options,
 		&client,
 	}
+
 	return &conn
 }
