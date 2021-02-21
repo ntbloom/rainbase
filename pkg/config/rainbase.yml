@@ -1,12 +1,13 @@
 logger:
   level: debug
 
-packet:
-  length:
-    max: 7
-connection:
-  port: /dev/ttyACM99
-  timeout: 10s
+usb:
+  packet:
+    length:
+      max: 7
+  connection:
+    port: /dev/ttyACM99
+    timeout: 10s
 
 mqtt:
   scheme: ssl

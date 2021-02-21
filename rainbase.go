@@ -13,7 +13,7 @@ import (
 
 // set the logger level
 func setLogger() {
-	level, err := logrus.ParseLevel(viper.GetString("logger.level"))
+	level, err := logrus.ParseLevel(viper.GetString(config.Loglevel))
 	if err != nil {
 		logrus.SetLevel(logrus.InfoLevel)
 	} else {
@@ -25,14 +25,15 @@ func setLogger() {
 // get a serial connection
 func getSerialConnection() (*serial.Serial, error) {
 	conn, err := serial.NewConnection(
-		viper.GetString("connection.port"),
-		viper.GetInt("packet.length.max"),
-		viper.GetDuration("connection.timeout"),
+		viper.GetString(config.USBConnectionPort),
+		viper.GetInt(config.USBPacketLengthMax),
+		viper.GetDuration(config.USBConnectionTimeout),
 	)
 	return conn, err
 }
 
 // run main loop for number of seconds or indefinitely
+// for debugging/testing purposes; not to be used for production
 func listen(duration int) {
 	conn, err := getSerialConnection()
 	if err != nil {
@@ -47,7 +48,7 @@ func listen(duration int) {
 		}
 		conn.State <- serial.Closed
 	}
-	logrus.Error("reaching end of listener, program about to end")
+	logrus.Info("reaching end of listener, program about to end")
 }
 
 func main() {

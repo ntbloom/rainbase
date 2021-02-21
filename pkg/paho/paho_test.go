@@ -3,18 +3,29 @@ package paho_test
 import (
 	"testing"
 
+	"github.com/ntbloom/rainbase/pkg/config"
+	"github.com/spf13/viper"
+
 	"github.com/ntbloom/rainbase/pkg/paho"
 )
 
+// reusable paho function
 func pahoFixture() *paho.Connection {
-	//scheme := viper.GetString("mqtt.scheme")
-	return nil
+	config.GetConfig()
+	scheme := viper.GetString(config.MQTTScheme)
+	broker := viper.GetString(config.MQTTBrokerIP)
+	port := viper.GetInt(config.MQTTBrokerPort)
+	caCert := viper.GetString(config.MQTTCaCert)
+	clientCert := viper.GetString(config.MQTTClientCert)
+	clientKey := viper.GetString(config.MQTTClientKey)
+	return paho.NewConnection(scheme, broker, port, caCert, clientCert, clientKey)
 }
 
 func TestMQTTConnection(t *testing.T) {
-	//t.Fail()
-	// connect to paho
-	// listen for messages
-	// publish hello
-	// confirm message is received
+	conn := pahoFixture()
+	client := *conn.Client
+	client.Connect()
+	if !client.IsConnected() {
+		t.Fail()
+	}
 }
