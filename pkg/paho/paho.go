@@ -48,6 +48,7 @@ func configureTlsConfig(caCertFile, clientCertFile, clientKeyFile string) (*tls.
 	ca, err := ioutil.ReadFile(caCertFile)
 	if err != nil {
 		logrus.Errorf("problem reading CA file at %s: %s", caCertFile, err)
+		return nil, err
 	}
 	certpool.AppendCertsFromPEM(ca)
 
@@ -60,7 +61,7 @@ func configureTlsConfig(caCertFile, clientCertFile, clientKeyFile string) (*tls.
 
 	return &tls.Config{
 		RootCAs:            certpool,
-		ClientAuth:         tls.NoClientCert,
+		ClientAuth:         tls.RequireAndVerifyClientCert,
 		ClientCAs:          nil,
 		InsecureSkipVerify: true,
 		Certificates:       []tls.Certificate{cert},
