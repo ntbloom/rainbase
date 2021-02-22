@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
+	"github.com/ntbloom/rainbase/pkg/config/configkey"
+	"github.com/spf13/viper"
+
 	"github.com/sirupsen/logrus"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -18,17 +21,39 @@ type Connection struct {
 	Client  *mqtt.Client
 }
 
+// ConnectionConfig configures the paho connection
+type ConnectionConfig struct {
+	scheme     string
+	broker     string
+	port       int
+	caCert     string
+	clientCert string
+	clientKey  string
+}
+
+// GetConfigFromViper get paho configuration details from viper directly
+func GetConfigFromViper() *ConnectionConfig {
+	return &ConnectionConfig{
+		scheme:     viper.GetString(configkey.MQTTScheme),
+		broker:     viper.GetString(configkey.MQTTBrokerIP),
+		port:       viper.GetInt(configkey.MQTTBrokerPort),
+		caCert:     viper.GetString(configkey.MQTTCaCert),
+		clientCert: viper.GetString(configkey.MQTTClientCert),
+		clientKey:  viper.GetString(configkey.MQTTClientKey),
+	}
+}
+
 // NewConnection creates a new MQTT connection or error
-func NewConnection(scheme, broker string, port int, caCert, clientCert, clientKey string) (*Connection, error) {
+func NewConnection(config *ConnectionConfig) (*Connection, error) {
 	options := mqtt.NewClientOptions()
 
 	// add broker
-	server := fmt.Sprintf("%s://%s:%d", scheme, broker, port)
+	server := fmt.Sprintf("%s://%s:%d", config.scheme, config.broker, config.port)
 	logrus.Infof("opening MQTT connection at %s", server)
 	options.AddBroker(server)
 
 	// configure tls
-	tlsConfig, err := configureTlsConfig(caCert, clientCert, clientKey)
+	tlsConfig, err := configureTlsConfig(config.caCert, config.clientCert, config.clientKey)
 	if err != nil {
 		return nil, err
 	}

@@ -6,7 +6,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/ntbloom/rainbase/pkg/config"
-	"github.com/spf13/viper"
 
 	"github.com/ntbloom/rainbase/pkg/paho"
 )
@@ -14,13 +13,8 @@ import (
 // reusable paho function
 func pahoFixture(t *testing.T) *paho.Connection {
 	config.GetConfig()
-	scheme := viper.GetString(config.MQTTScheme)
-	broker := viper.GetString(config.MQTTBrokerIP)
-	port := viper.GetInt(config.MQTTBrokerPort)
-	caCert := viper.GetString(config.MQTTCaCert)
-	clientCert := viper.GetString(config.MQTTClientCert)
-	clientKey := viper.GetString(config.MQTTClientKey)
-	conn, err := paho.NewConnection(scheme, broker, port, caCert, clientCert, clientKey)
+	pahoConfig := paho.GetConfigFromViper()
+	conn, err := paho.NewConnection(pahoConfig)
 	if err != nil {
 		t.Fail()
 	}

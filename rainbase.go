@@ -3,6 +3,8 @@ package main
 import (
 	"time"
 
+	"github.com/ntbloom/rainbase/pkg/config/configkey"
+
 	"github.com/ntbloom/rainbase/pkg/config"
 
 	"github.com/ntbloom/rainbase/pkg/serial"
@@ -13,7 +15,7 @@ import (
 
 // set the logger level
 func setLogger() {
-	level, err := logrus.ParseLevel(viper.GetString(config.Loglevel))
+	level, err := logrus.ParseLevel(viper.GetString(configkey.Loglevel))
 	if err != nil {
 		logrus.SetLevel(logrus.InfoLevel)
 	} else {
@@ -25,9 +27,9 @@ func setLogger() {
 // get a serial connection
 func getSerialConnection() (*serial.Serial, error) {
 	conn, err := serial.NewConnection(
-		viper.GetString(config.USBConnectionPort),
-		viper.GetInt(config.USBPacketLengthMax),
-		viper.GetDuration(config.USBConnectionTimeout),
+		viper.GetString(configkey.USBConnectionPort),
+		viper.GetInt(configkey.USBPacketLengthMax),
+		viper.GetDuration(configkey.USBConnectionTimeout),
 	)
 	return conn, err
 }

@@ -4,24 +4,10 @@ package config
 import (
 	"fmt"
 
+	"github.com/ntbloom/rainbase/pkg/config/configkey"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-)
-
-// Map all yaml params to a constant
-const (
-	Loglevel = "logger.level"
-
-	USBPacketLengthMax   = "usb.packet.length.max"
-	USBConnectionPort    = "usb.connection.port"
-	USBConnectionTimeout = "usb.connection.timeout"
-
-	MQTTScheme     = "mqtt.scheme"
-	MQTTBrokerIP   = "mqtt.broker.ip"
-	MQTTBrokerPort = "mqtt.broker.port"
-	MQTTCaCert     = "mqtt.certs.ca"
-	MQTTClientCert = "mqtt.certs.client"
-	MQTTClientKey  = "mqtt.certs.key"
 )
 
 // config files
@@ -47,5 +33,5 @@ func GetConfig() {
 	if err != nil {
 		logrus.Fatal("secrets not loaded")
 	}
-	fmt.Println(viper.GetString(MQTTBrokerIP))
+	fmt.Println(viper.GetString(configkey.MQTTBrokerIP))
 }
