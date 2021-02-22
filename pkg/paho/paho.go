@@ -53,7 +53,7 @@ func NewConnection(config *ConnectionConfig) (*Connection, error) {
 	options.AddBroker(server)
 
 	// configure tls
-	tlsConfig, err := configureTlsConfig(config.caCert, config.clientCert, config.clientKey)
+	tlsConfig, err := configureTLSConfig(config.caCert, config.clientCert, config.clientKey)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func NewConnection(config *ConnectionConfig) (*Connection, error) {
 }
 
 // get a new config for ssl
-func configureTlsConfig(caCertFile, clientCertFile, clientKeyFile string) (*tls.Config, error) {
+func configureTLSConfig(caCertFile, clientCertFile, clientKeyFile string) (*tls.Config, error) {
 	// import CA from file
 	certpool := x509.NewCertPool()
 	ca, err := ioutil.ReadFile(caCertFile)
@@ -88,8 +88,7 @@ func configureTlsConfig(caCertFile, clientCertFile, clientKeyFile string) (*tls.
 		RootCAs:            certpool,
 		ClientAuth:         tls.RequireAndVerifyClientCert,
 		ClientCAs:          nil,
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: true, //nolint:gosect
 		Certificates:       []tls.Certificate{cert},
 	}, nil
-
 }

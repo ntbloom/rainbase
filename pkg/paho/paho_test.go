@@ -21,13 +21,12 @@ func pahoFixture(t *testing.T) *paho.Connection {
 	return conn
 }
 
-// Can
+// Can we connect with the remote server (requires server to be working)
 func TestMQTTConnection(t *testing.T) {
 	conn := pahoFixture(t)
 	client := *conn.Client
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		t.Fail()
-
 	}
 	defer client.Disconnect(1000)
 	if !client.IsConnected() {
