@@ -13,7 +13,7 @@ import (
 )
 
 // reusable paho function
-func pahoFixture() *paho.Connection {
+func pahoFixture(t *testing.T) *paho.Connection {
 	config.GetConfig()
 	scheme := viper.GetString(config.MQTTScheme)
 	broker := viper.GetString(config.MQTTBrokerIP)
@@ -21,12 +21,16 @@ func pahoFixture() *paho.Connection {
 	caCert := viper.GetString(config.MQTTCaCert)
 	clientCert := viper.GetString(config.MQTTClientCert)
 	clientKey := viper.GetString(config.MQTTClientKey)
-	return paho.NewConnection(scheme, broker, port, caCert, clientCert, clientKey)
+	conn, err := paho.NewConnection(scheme, broker, port, caCert, clientCert, clientKey)
+	if err != nil {
+		t.Fail()
+	}
+	return conn
 }
 
 // Can
 func TestMQTTConnection(t *testing.T) {
-	conn := pahoFixture()
+	conn := pahoFixture(t)
 	client := *conn.Client
 	token := client.Connect()
 	fmt.Println(token)

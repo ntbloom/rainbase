@@ -3,4 +3,5 @@ package exitcodes
 
 const (
 	SerialPortNotFound = 1
+	TLSError = 2
 )
