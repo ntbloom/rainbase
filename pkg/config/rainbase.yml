@@ -17,3 +17,8 @@ mqtt:
     key: /etc/rainbase/ssl/client.key
   connection:
     timeout: 5s
+
+sensor:
+  rain:
+    measurement:
+      inches: 0.11

@@ -15,4 +15,6 @@ const (
 	MQTTClientCert        = "mqtt.certs.client"
 	MQTTClientKey         = "mqtt.certs.key"
 	MQTTConnectionTimeout = "mqtt.connection.timeout"
+
+	SensorRainInches = "sensor.rain.measurement.inches"
 )
