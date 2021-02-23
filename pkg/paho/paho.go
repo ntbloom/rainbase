@@ -13,14 +13,8 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-// Connection is the entrypoint for all things MQTT
-type Connection struct {
-	Options *mqtt.ClientOptions
-	Client  *mqtt.Client
-}
-
-// ConnectionConfig configures the paho connection
-type ConnectionConfig struct {
+// PahoConfig configures the paho connection
+type PahoConfig struct {
 	scheme            string
 	broker            string
 	port              int
@@ -31,8 +25,8 @@ type ConnectionConfig struct {
 }
 
 // GetConfigFromViper get paho configuration details from viper directly
-func GetConfigFromViper() *ConnectionConfig {
-	return &ConnectionConfig{
+func GetConfigFromViper() *PahoConfig {
+	return &PahoConfig{
 		scheme:            viper.GetString(configkey.MQTTScheme),
 		broker:            viper.GetString(configkey.MQTTBrokerIP),
 		port:              viper.GetInt(configkey.MQTTBrokerPort),
@@ -44,12 +38,12 @@ func GetConfigFromViper() *ConnectionConfig {
 }
 
 // NewConnection creates a new MQTT connection or error
-func NewConnection(config *ConnectionConfig) (*Connection, error) {
+func NewConnection(config *PahoConfig) (*mqtt.Client, error) {
 	options := mqtt.NewClientOptions()
 
 	// add broker
 	server := fmt.Sprintf("%s://%s:%d", config.scheme, config.broker, config.port)
-	logrus.Infof("opening MQTT connection at %s", server)
+	logrus.Debugf("opening MQTT connection at %s", server)
 	options.AddBroker(server)
 
 	// configure tls
@@ -63,8 +57,6 @@ func NewConnection(config *ConnectionConfig) (*Connection, error) {
 	options.SetConnectTimeout(config.connectionTimeout)
 
 	client := mqtt.NewClient(options)
-	return &Connection{
-		options,
-		&client,
-	}, nil
+	return &client,
+		nil
 }

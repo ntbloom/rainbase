@@ -2,10 +2,6 @@
 package config
 
 import (
-	"fmt"
-
-	"github.com/ntbloom/rainbase/pkg/config/configkey"
-
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -33,5 +29,4 @@ func GetConfig() {
 	if err != nil {
 		logrus.Fatal("secrets not loaded")
 	}
-	fmt.Println(viper.GetString(configkey.MQTTBrokerIP))
 }

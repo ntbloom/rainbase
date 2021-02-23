@@ -14,7 +14,7 @@ tasks:
   test:
     desc: Run the test suite
     cmds:
-      - go test -v ./...
+      - go test ./... | grep -v "no test files"
 
   run:
     desc: run the binary

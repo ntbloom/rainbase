@@ -3,6 +3,7 @@ package paho_test
 import (
 	"testing"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/sirupsen/logrus"
 
 	"github.com/ntbloom/rainbase/pkg/config"
@@ -11,20 +12,19 @@ import (
 )
 
 // reusable paho function
-func pahoFixture(t *testing.T) *paho.Connection {
+func pahoFixture(t *testing.T) *mqtt.Client {
 	config.GetConfig()
 	pahoConfig := paho.GetConfigFromViper()
-	conn, err := paho.NewConnection(pahoConfig)
+	client, err := paho.NewConnection(pahoConfig)
 	if err != nil {
 		t.Fail()
 	}
-	return conn
+	return client
 }
 
 // Can we connect with the remote server (requires server to be working)
 func TestMQTTConnection(t *testing.T) {
-	conn := pahoFixture(t)
-	client := *conn.Client
+	client := *pahoFixture(t)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		t.Fail()
 	}
