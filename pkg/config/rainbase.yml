@@ -15,3 +15,5 @@ mqtt:
     ca: /etc/rainbase/ssl/ca.crt
     client: /etc/rainbase/ssl/client.crt
     key: /etc/rainbase/ssl/client.key
+  connection:
+    timeout: 5s

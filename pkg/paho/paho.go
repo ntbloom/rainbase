@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/ntbloom/rainbase/pkg/config/configkey"
 	"github.com/spf13/viper"
@@ -23,23 +24,25 @@ type Connection struct {
 
 // ConnectionConfig configures the paho connection
 type ConnectionConfig struct {
-	scheme     string
-	broker     string
-	port       int
-	caCert     string
-	clientCert string
-	clientKey  string
+	scheme            string
+	broker            string
+	port              int
+	caCert            string
+	clientCert        string
+	clientKey         string
+	connectionTimeout time.Duration
 }
 
 // GetConfigFromViper get paho configuration details from viper directly
 func GetConfigFromViper() *ConnectionConfig {
 	return &ConnectionConfig{
-		scheme:     viper.GetString(configkey.MQTTScheme),
-		broker:     viper.GetString(configkey.MQTTBrokerIP),
-		port:       viper.GetInt(configkey.MQTTBrokerPort),
-		caCert:     viper.GetString(configkey.MQTTCaCert),
-		clientCert: viper.GetString(configkey.MQTTClientCert),
-		clientKey:  viper.GetString(configkey.MQTTClientKey),
+		scheme:            viper.GetString(configkey.MQTTScheme),
+		broker:            viper.GetString(configkey.MQTTBrokerIP),
+		port:              viper.GetInt(configkey.MQTTBrokerPort),
+		caCert:            viper.GetString(configkey.MQTTCaCert),
+		clientCert:        viper.GetString(configkey.MQTTClientCert),
+		clientKey:         viper.GetString(configkey.MQTTClientKey),
+		connectionTimeout: viper.GetDuration(configkey.MQTTConnectionTimeout),
 	}
 }
 
@@ -58,6 +61,9 @@ func NewConnection(config *ConnectionConfig) (*Connection, error) {
 		return nil, err
 	}
 	options.SetTLSConfig(tlsConfig)
+
+	// miscellaneous options
+	options.SetConnectTimeout(config.connectionTimeout)
 
 	client := mqtt.NewClient(options)
 	return &Connection{
