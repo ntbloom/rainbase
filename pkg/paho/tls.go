@@ -32,7 +32,7 @@ func configureTLSConfig(caCertFile, clientCertFile, clientKeyFile string) (*tls.
 		RootCAs:            certpool,
 		ClientAuth:         tls.RequireAndVerifyClientCert,
 		ClientCAs:          nil,
-		InsecureSkipVerify: true, //nolint:gosect
+		InsecureSkipVerify: true, //nolint:gosec
 		Certificates:       []tls.Certificate{cert},
 	}, nil
 }

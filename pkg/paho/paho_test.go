@@ -12,7 +12,7 @@ import (
 )
 
 // reusable paho function
-func pahoFixture(t *testing.T) *mqtt.Client {
+func pahoFixture(t *testing.T) mqtt.Client {
 	config.GetConfig()
 	pahoConfig := paho.GetConfigFromViper()
 	client, err := paho.NewConnection(pahoConfig)
@@ -24,7 +24,7 @@ func pahoFixture(t *testing.T) *mqtt.Client {
 
 // Can we connect with the remote server (requires server to be working)
 func TestMQTTConnection(t *testing.T) {
-	client := *pahoFixture(t)
+	client := pahoFixture(t)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		t.Fail()
 	}

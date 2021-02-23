@@ -13,8 +13,8 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-// PahoConfig configures the paho connection
-type PahoConfig struct {
+// MqttConfig configures the paho connection
+type MqttConfig struct {
 	scheme            string
 	broker            string
 	port              int
@@ -25,8 +25,8 @@ type PahoConfig struct {
 }
 
 // GetConfigFromViper get paho configuration details from viper directly
-func GetConfigFromViper() *PahoConfig {
-	return &PahoConfig{
+func GetConfigFromViper() *MqttConfig {
+	return &MqttConfig{
 		scheme:            viper.GetString(configkey.MQTTScheme),
 		broker:            viper.GetString(configkey.MQTTBrokerIP),
 		port:              viper.GetInt(configkey.MQTTBrokerPort),
@@ -38,7 +38,7 @@ func GetConfigFromViper() *PahoConfig {
 }
 
 // NewConnection creates a new MQTT connection or error
-func NewConnection(config *PahoConfig) (*mqtt.Client, error) {
+func NewConnection(config *MqttConfig) (mqtt.Client, error) {
 	options := mqtt.NewClientOptions()
 
 	// add broker
@@ -57,6 +57,6 @@ func NewConnection(config *PahoConfig) (*mqtt.Client, error) {
 	options.SetConnectTimeout(config.connectionTimeout)
 
 	client := mqtt.NewClient(options)
-	return &client,
+	return client,
 		nil
 }
