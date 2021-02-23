@@ -2,163 +2,46 @@
 package messenger
 
 import (
-	"encoding/json"
-	"time"
-
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-
-	"github.com/ntbloom/rainbase/pkg/tlv"
+	"github.com/ntbloom/rainbase/pkg/config/configkey"
 	"github.com/sirupsen/logrus"
 )
 
-// temperature values
-const (
-	DegreesF = string("\u00B0F")
-	DegreesC = string("\u00B0C")
-)
-
-// values for static status messages
-const (
-	OK              = "gatewayOkay"
-	SensorLost      = "sensorLost"
-	SensorPause     = "sensorPause"
-	SensorUnpause   = "sensorUnpause"
-	SensorSoftReset = "sensorSoftReset"
-	SensorHardReset = "sensorHardReset"
-)
-
-// Payload generic type of message we'll send over MQTT
-type Payload interface {
-	Process() ([]byte, error)
+// Messenger receives Message from serial port, publishes to mqtt and stores locally
+type Messenger struct {
+	client mqtt.Client
+	State  chan int
+	Data   chan *Message
 }
 
-// generic wrapper for all implementations of Payload
-func process(p Payload) ([]byte, error) {
-	payload, err := json.Marshal(p)
-	if err != nil {
-		return nil, err
+// NewMessenger get a new messenger
+func NewMessenger(client mqtt.Client) *Messenger {
+	state := make(chan int)
+	data := make(chan *Message)
+	if token := client.Connect(); token.Wait() && token.Error() != nil {
+		logrus.Errorf("unable to connect to MQTT: %s", token.Error())
 	}
-	return payload, nil
+	return &Messenger{client, state, data}
 }
 
-// SensorStatus gives static message about what's happening to the sensor
-type SensorStatus struct {
-	status    string
-	timestamp time.Time
-}
+// Wait for packet to publish or to receive signal interrupt
+func (m *Messenger) Listen() {
+	var msg *Message
+	defer m.client.Disconnect(1000)
 
-// TemperatureEvent sends current temperature in Celsius
-type TemperatureEvent struct {
-	tempC     int
-	timestamp time.Time
-}
-
-// RainEvent sends message about rain event
-type RainEvent struct {
-	value     float32
-	timestamp time.Time
-}
-
-// SensorStatus.Process turn static value into mqtt payload
-func (s *SensorStatus) Process() ([]byte, error) {
-	return process(s)
-}
-
-// TemperatureEvent.Process turn temp into mqtt payload
-func (t *TemperatureEvent) Process() ([]byte, error) {
-	return process(t)
-}
-
-// RainEvent.Process turn rain event into mqtt payload
-func (r *RainEvent) Process() ([]byte, error) {
-	return process(r)
-}
-
-type Message struct {
-	client   mqtt.Client
-	topic    string
-	retained bool
-	qos      byte
-	payload  []byte
-}
-
-// NewMessage makes a new message from a tlv packet mqtt topic
-func NewMessage(client mqtt.Client, topic string, packet *tlv.TLV, rainAmt *float32) (*Message, error) {
-	now := time.Now()
-	var payload []byte
-	var err error
-
-	switch packet.Tag {
-	case tlv.Rain:
-		rain := RainEvent{
-			value:     *rainAmt,
-			timestamp: now,
+	// loop until signal
+	for {
+		select {
+		case m.State <- configkey.SerialClosed:
+			logrus.Debug("received `Closed` signal, closing mqtt connection")
+			return
+		case m.Data <- msg:
+			logrus.Debugf("received Message from serial port: %s", msg.payload)
+			m.Publish(msg)
 		}
-		payload, err = rain.Process()
-		if err != nil {
-			return nil, err
-		}
-	case tlv.Temperature:
-		temp := TemperatureEvent{
-			tempC:     packet.Value,
-			timestamp: now,
-		}
-		payload, err = temp.Process()
-		if err != nil {
-			return nil, err
-		}
-	case tlv.SoftReset:
-		soft := SensorStatus{
-			status:    SensorSoftReset,
-			timestamp: now,
-		}
-		payload, err = soft.Process()
-		if err != nil {
-			return nil, err
-		}
-	case tlv.HardReset:
-		hard := SensorStatus{
-			status:    SensorHardReset,
-			timestamp: now,
-		}
-		payload, err = hard.Process()
-		if err != nil {
-			return nil, err
-		}
-	case tlv.Pause:
-		pause := SensorStatus{
-			status:    SensorPause,
-			timestamp: now,
-		}
-		payload, err = pause.Process()
-		if err != nil {
-			return nil, err
-		}
-	case tlv.Unpause:
-		unpause := SensorStatus{
-			status:    SensorUnpause,
-			timestamp: now,
-		}
-		payload, err = unpause.Process()
-		if err != nil {
-			return nil, err
-		}
-	default:
-		logrus.Errorf("unsupported tag %d", packet.Tag)
-		return nil, nil
 	}
-	msg := Message{
-		client:   client,
-		topic:    topic,
-		retained: false,
-		qos:      0,
-		payload:  payload,
-	}
-	return &msg, nil
-
 }
 
-// SendMessage sends payload to the cloud over mqtt
-func (m *Message) SendMessage() {
-	m.client.Publish(m.topic, m.qos, m.retained, m.payload)
+func (m *Messenger) Publish(msg *Message) {
+	m.client.Publish(msg.topic, msg.qos, msg.retained, msg.payload)
 }

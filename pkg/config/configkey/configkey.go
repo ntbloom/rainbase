@@ -18,3 +18,10 @@ const (
 
 	SensorRainInches = "sensor.rain.measurement.inches"
 )
+
+// random constants, not tied to config
+const (
+	DegreesF     = string("\u00B0F")
+	DegreesC     = string("\u00B0C")
+	SerialClosed = 1
+)

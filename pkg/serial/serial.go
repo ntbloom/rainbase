@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/ntbloom/rainbase/pkg/config/configkey"
+
 	"github.com/ntbloom/rainbase/pkg/messenger"
 
 	"github.com/ntbloom/rainbase/pkg/exitcodes"
@@ -12,9 +14,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 )
-
-// uint8 for state of serial port
-const Closed = 1
 
 // Serial communicates with a serial port
 type Serial struct {
@@ -24,10 +23,11 @@ type Serial struct {
 	data         []byte
 	file         *os.File
 	State        chan uint8
+	Messenger    *messenger.Messenger
 }
 
 // NewConnection: create a new serial connection with a unix filename
-func NewConnection(port string, maxPacketLen int, timeout time.Duration) (*Serial, error) {
+func NewConnection(port string, maxPacketLen int, timeout time.Duration, messenger *messenger.Messenger) (*Serial, error) {
 	checkPortStatus(port, timeout)
 	logrus.Infof("opening connection on `%s`", port)
 	var data []byte
@@ -49,6 +49,7 @@ func NewConnection(port string, maxPacketLen int, timeout time.Duration) (*Seria
 		data,
 		file,
 		state,
+		messenger,
 	}
 
 	return uart, nil
@@ -83,13 +84,18 @@ func (serial *Serial) GetTLV() {
 		if err != nil {
 			logrus.Errorf("unexpected TLV packet: %s", err)
 		}
-		go messenger.Handle(tlvPacket)
+		msg, err := messenger.NewMessage(tlvPacket)
+		if err != nil {
+			logrus.Errorf("bad tlv packet, ignoring: %s", err)
+			continue
+		}
+		serial.Messenger.Data <- msg
 
 		// run forever until uninterrupted by close signal
 		select {
 		case state := <-serial.State:
-			if state == Closed {
-				logrus.Debug("received `Closed` signal")
+			if state == configkey.SerialClosed {
+				logrus.Debug("received `Closed` signal, closing serial connection")
 				serial.Close()
 				break
 			}

@@ -2,6 +2,7 @@
 package config
 
 import (
+	"github.com/ntbloom/rainbase/pkg/config/configkey"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -12,6 +13,8 @@ const (
 	mainConfig    = "rainbase"
 	secretsConfig = "secrets"
 )
+
+var RainAmt float64 = viper.GetFloat64(configkey.SensorRainInches)
 
 // GetConfig process config files
 func GetConfig() {
