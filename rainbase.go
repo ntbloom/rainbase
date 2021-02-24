@@ -12,17 +12,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// set the logger level
-func setLogger() {
-	level, err := logrus.ParseLevel(viper.GetString(configkey.Loglevel))
-	if err != nil {
-		logrus.SetLevel(logrus.InfoLevel)
-	} else {
-		logrus.SetLevel(level)
-	}
-	logrus.Infof("logger set to %s level", logrus.GetLevel())
-}
-
 // get a serial connection
 func getSerialConnection(messenger *messenger.Messenger) (*serial.Serial, error) {
 	conn, err := serial.NewConnection(
@@ -44,7 +33,7 @@ func listen(duration int) {
 	dataMessenger := messenger.NewMessenger(client)
 	conn, err := getSerialConnection(dataMessenger)
 	if err != nil {
-		logrus.Fatal(err)
+		panic(err)
 	}
 	go dataMessenger.Listen()
 
@@ -61,8 +50,7 @@ func listen(duration int) {
 }
 
 func main() {
-	config.GetConfig()
-	setLogger()
+	config.Configure()
 
 	// run the main listening loop
 	duration := 10

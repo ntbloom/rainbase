@@ -13,7 +13,7 @@ import (
 
 // reusable paho function
 func pahoFixture(t *testing.T) mqtt.Client {
-	config.GetConfig()
+	config.Configure()
 	pahoConfig := paho.GetConfigFromViper()
 	client, err := paho.NewConnection(pahoConfig)
 	if err != nil {
