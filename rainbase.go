@@ -53,6 +53,6 @@ func main() {
 	config.Configure()
 
 	// run the main listening loop
-	duration := 10
+	duration := 30
 	listen(duration)
 }

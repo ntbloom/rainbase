@@ -35,28 +35,30 @@ func process(p Payload) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	val := string(payload)
+	logrus.Debug(val)
 	return payload, nil
 }
 
 // SensorStatus gives static message about what's happening to the sensor
 type SensorStatus struct {
-	topic     string
-	status    string
-	timestamp time.Time
+	Topic     string
+	Status    string
+	Timestamp time.Time
 }
 
 // TemperatureEvent sends current temperature in Celsius
 type TemperatureEvent struct {
-	topic     string
-	tempC     int
-	timestamp time.Time
+	Topic     string
+	TempC     int
+	Timestamp time.Time
 }
 
 // RainEvent sends message about rain event
 type RainEvent struct {
-	topic     string
-	value     float32
-	timestamp time.Time
+	Topic     string
+	Value     float32
+	Timestamp time.Time
 }
 
 // SensorStatus.Process turn static value into mqtt payload
@@ -91,67 +93,67 @@ func NewMessage(packet *tlv.TLV) (*Message, error) {
 	switch packet.Tag {
 	case tlv.Rain:
 		rain := RainEvent{
-			topic:     paho.RainTopic,
-			value:     float32(config.RainAmt),
-			timestamp: now,
+			paho.RainTopic,
+			float32(config.RainAmt),
+			now,
 		}
 		payload, err = rain.Process()
-		topic = rain.topic
+		topic = rain.Topic
 		if err != nil {
 			return nil, err
 		}
 	case tlv.Temperature:
 		temp := TemperatureEvent{
-			topic:     paho.TemperatureTopic,
-			tempC:     packet.Value,
-			timestamp: now,
+			paho.TemperatureTopic,
+			packet.Value,
+			now,
 		}
 		payload, err = temp.Process()
-		topic = temp.topic
+		topic = temp.Topic
 		if err != nil {
 			return nil, err
 		}
 	case tlv.SoftReset:
 		soft := SensorStatus{
-			topic:     paho.SoftResetTopic,
-			status:    SensorSoftReset,
-			timestamp: now,
+			paho.SoftResetTopic,
+			SensorSoftReset,
+			now,
 		}
 		payload, err = soft.Process()
-		topic = soft.topic
+		topic = soft.Topic
 		if err != nil {
 			return nil, err
 		}
 	case tlv.HardReset:
 		hard := SensorStatus{
-			topic:     paho.HardResetTopic,
-			status:    SensorHardReset,
-			timestamp: now,
+			paho.HardResetTopic,
+			SensorHardReset,
+			now,
 		}
 		payload, err = hard.Process()
-		topic = hard.topic
+		topic = hard.Topic
 		if err != nil {
 			return nil, err
 		}
 	case tlv.Pause:
 		pause := SensorStatus{
-			topic:     paho.PauseTopic,
-			status:    SensorPause,
-			timestamp: now,
+			paho.PauseTopic,
+			SensorPause,
+			now,
 		}
 		payload, err = pause.Process()
-		topic = pause.topic
+		topic = pause.Topic
 		if err != nil {
 			return nil, err
 		}
 	case tlv.Unpause:
 		unpause := SensorStatus{
-			topic:     paho.UnpauseTopic,
-			status:    SensorUnpause,
-			timestamp: now,
+			paho.UnpauseTopic,
+			SensorUnpause,
+			now,
 		}
 		payload, err = unpause.Process()
-		topic = unpause.topic
+		topic = unpause.Topic
 		if err != nil {
 			return nil, err
 		}
