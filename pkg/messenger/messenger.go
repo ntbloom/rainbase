@@ -26,16 +26,18 @@ func NewMessenger(client mqtt.Client) *Messenger {
 
 // Wait for packet to publish or to receive signal interrupt
 func (m *Messenger) Listen() {
-	var msg *Message
 	defer m.client.Disconnect(1000)
 
 	// loop until signal
 	for {
 		select {
-		case m.State <- configkey.SerialClosed:
-			logrus.Debug("received `Closed` signal, closing mqtt connection")
-			return
-		case m.Data <- msg:
+		//case m.State <- configkey.SerialClosed:
+		case closed := <-m.State:
+			if closed == configkey.SerialClosed {
+				logrus.Debug("received `Closed` signal, closing mqtt connection")
+				return
+			}
+		case msg := <-m.Data:
 			logrus.Debugf("received Message from serial port: %s", msg.payload)
 			m.Publish(msg)
 		}
