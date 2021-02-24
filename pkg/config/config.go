@@ -14,8 +14,6 @@ const (
 	secretsConfig = "secrets"
 )
 
-var RainAmt float64 = viper.GetFloat64(configkey.SensorRainInches)
-
 // Configure process config files and set log level
 func Configure() {
 	// get the base config

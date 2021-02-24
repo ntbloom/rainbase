@@ -8,8 +8,6 @@ import (
 
 	"github.com/ntbloom/rainbase/pkg/paho"
 
-	"github.com/ntbloom/rainbase/pkg/config"
-
 	"github.com/ntbloom/rainbase/pkg/tlv"
 	"github.com/sirupsen/logrus"
 )
@@ -94,7 +92,7 @@ func NewMessage(packet *tlv.TLV) (*Message, error) {
 	case tlv.Rain:
 		rain := RainEvent{
 			paho.RainTopic,
-			float32(config.RainAmt),
+			0.11,
 			now,
 		}
 		payload, err = rain.Process()
