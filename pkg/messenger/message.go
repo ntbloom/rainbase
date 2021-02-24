@@ -169,5 +169,4 @@ func NewMessage(packet *tlv.TLV) (*Message, error) {
 		payload:  payload,
 	}
 	return &msg, nil
-
 }

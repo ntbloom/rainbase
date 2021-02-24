@@ -5,6 +5,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/ntbloom/rainbase/pkg/config/configkey"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // Messenger receives Message from serial port, publishes to mqtt and stores locally
@@ -26,24 +27,25 @@ func NewMessenger(client mqtt.Client) *Messenger {
 
 // Wait for packet to publish or to receive signal interrupt
 func (m *Messenger) Listen() {
-	defer m.client.Disconnect(1000)
+	defer m.client.Disconnect(viper.GetUint(configkey.MQTTQuiescence))
 
 	// loop until signal
 	for {
 		select {
-		//case m.State <- configkey.SerialClosed:
 		case closed := <-m.State:
 			if closed == configkey.SerialClosed {
 				logrus.Debug("received `Closed` signal, closing mqtt connection")
 				return
 			}
 		case msg := <-m.Data:
-			logrus.Debugf("received Message from serial port: %s", msg.payload)
+			logrus.Tracef("received Message from serial port: %s", msg.payload)
 			m.Publish(msg)
 		}
 	}
 }
 
+// Publish send a Message over MQTT
 func (m *Messenger) Publish(msg *Message) {
+	logrus.Tracef("sending Message over MQTT: %s", msg.payload)
 	m.client.Publish(msg.topic, msg.qos, msg.retained, msg.payload)
 }

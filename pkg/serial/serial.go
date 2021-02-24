@@ -27,7 +27,7 @@ type Serial struct {
 }
 
 // NewConnection: create a new serial connection with a unix filename
-func NewConnection(port string, maxPacketLen int, timeout time.Duration, messenger *messenger.Messenger) (*Serial, error) {
+func NewConnection(port string, maxPacketLen int, timeout time.Duration, msgr *messenger.Messenger) (*Serial, error) {
 	checkPortStatus(port, timeout)
 	logrus.Infof("opening connection on `%s`", port)
 	var data []byte
@@ -49,7 +49,7 @@ func NewConnection(port string, maxPacketLen int, timeout time.Duration, messeng
 		data,
 		file,
 		state,
-		messenger,
+		msgr,
 	}
 
 	return uart, nil

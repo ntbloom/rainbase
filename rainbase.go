@@ -13,12 +13,12 @@ import (
 )
 
 // get a serial connection
-func getSerialConnection(messenger *messenger.Messenger) (*serial.Serial, error) {
+func getSerialConnection(msgr *messenger.Messenger) (*serial.Serial, error) {
 	conn, err := serial.NewConnection(
 		viper.GetString(configkey.USBConnectionPort),
 		viper.GetInt(configkey.USBPacketLengthMax),
 		viper.GetDuration(configkey.USBConnectionTimeout),
-		messenger,
+		msgr,
 	)
 	return conn, err
 }
@@ -30,12 +30,12 @@ func listen(duration int) {
 	if err != nil {
 		panic(err)
 	}
-	dataMessenger := messenger.NewMessenger(client)
-	conn, err := getSerialConnection(dataMessenger)
+	msgr := messenger.NewMessenger(client)
+	conn, err := getSerialConnection(msgr)
 	if err != nil {
 		panic(err)
 	}
-	go dataMessenger.Listen()
+	go msgr.Listen()
 
 	go conn.GetTLV()
 	if duration > 0 {
@@ -44,7 +44,7 @@ func listen(duration int) {
 			logrus.Tracef("sleep #%d", i+1)
 		}
 		conn.State <- configkey.SerialClosed
-		dataMessenger.State <- configkey.SerialClosed
+		msgr.State <- configkey.SerialClosed
 	}
 	logrus.Info("reaching end of listener, program about to end")
 }
