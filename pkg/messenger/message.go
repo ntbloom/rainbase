@@ -17,8 +17,6 @@ import (
 
 // values for static status messages
 const (
-	OK              = "gatewayOkay"
-	SensorLost      = "sensorLost"
 	SensorPause     = "sensorPause"
 	SensorUnpause   = "sensorUnpause"
 	SensorSoftReset = "sensorSoftReset"
@@ -41,8 +39,8 @@ func process(p Payload) ([]byte, error) {
 	return payload, nil
 }
 
-// SensorStatus gives static message about what's happening to the sensor
-type SensorStatus struct {
+// SensorEvent gives static message about what's happening to the sensor
+type SensorEvent struct {
 	Topic     string
 	Status    string
 	Timestamp time.Time
@@ -62,8 +60,22 @@ type RainEvent struct {
 	Timestamp   time.Time
 }
 
-// SensorStatus.Process turn static value into mqtt payload
-func (s *SensorStatus) Process() ([]byte, error) {
+// GatewayStatus sends "OK" message at regular intervals
+type GatewayStatus struct {
+	Topic     string
+	OK        bool
+	Timestamp time.Time
+}
+
+// SensorStatus sends "OK" if sensor is reachable, else "Bad"
+type SensorStatus struct {
+	Topic     string
+	OK        bool
+	Timestamp time.Time
+}
+
+// SensorEvent.Process turn static value into mqtt payload
+func (s *SensorEvent) Process() ([]byte, error) {
 	return process(s)
 }
 
@@ -75,6 +87,16 @@ func (t *TemperatureEvent) Process() ([]byte, error) {
 // RainEvent.Process turn rain event into mqtt payload
 func (r *RainEvent) Process() ([]byte, error) {
 	return process(r)
+}
+
+// GatewayStatus.Process turn gateway status message into mqtt payload
+func (gs *GatewayStatus) Process() ([]byte, error) {
+	return process(gs)
+}
+
+// SensorStatus.Process turn sensor status message into mqtt payload
+func (ss *SensorStatus) Process() ([]byte, error) {
+	return process(ss)
 }
 
 type Message struct {
@@ -115,8 +137,8 @@ func NewMessage(packet *tlv.TLV) (*Message, error) {
 			return nil, err
 		}
 	case tlv.SoftReset:
-		soft := SensorStatus{
-			paho.SoftResetTopic,
+		soft := SensorEvent{
+			paho.SensorEvent,
 			SensorSoftReset,
 			now,
 		}
@@ -126,8 +148,8 @@ func NewMessage(packet *tlv.TLV) (*Message, error) {
 			return nil, err
 		}
 	case tlv.HardReset:
-		hard := SensorStatus{
-			paho.HardResetTopic,
+		hard := SensorEvent{
+			paho.SensorEvent,
 			SensorHardReset,
 			now,
 		}
@@ -137,8 +159,8 @@ func NewMessage(packet *tlv.TLV) (*Message, error) {
 			return nil, err
 		}
 	case tlv.Pause:
-		pause := SensorStatus{
-			paho.PauseTopic,
+		pause := SensorEvent{
+			paho.SensorEvent,
 			SensorPause,
 			now,
 		}
@@ -148,8 +170,8 @@ func NewMessage(packet *tlv.TLV) (*Message, error) {
 			return nil, err
 		}
 	case tlv.Unpause:
-		unpause := SensorStatus{
-			paho.UnpauseTopic,
+		unpause := SensorEvent{
+			paho.SensorEvent,
 			SensorUnpause,
 			now,
 		}

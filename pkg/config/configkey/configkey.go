@@ -15,7 +15,7 @@ const (
 	MQTTClientCert        = "mqtt.certs.client"
 	MQTTClientKey         = "mqtt.certs.key"
 	MQTTConnectionTimeout = "mqtt.connection.timeout"
-	MQTTQuiescence        = "mqtt.quiescence"
+	MQTTQuiescence        = "mqtt.connection.quiescence"
 
 	SensorRainCustomary = "sensor.rain.measurement.inches"
 	SensorRainMetric    = "sensor.rain.measurement.mm"
@@ -23,7 +23,8 @@ const (
 
 // random constants, not tied to config
 const (
-	DegreesF     = string("\u00B0F")
-	DegreesC     = string("\u00B0C")
-	SerialClosed = 1
+	DegreesF          = string("\u00B0F")
+	DegreesC          = string("\u00B0C")
+	SerialClosed      = 1
+	SendStatusMessage = 2
 )

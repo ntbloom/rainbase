@@ -2,8 +2,12 @@
 package messenger
 
 import (
+	"os"
+	"time"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/ntbloom/rainbase/pkg/config/configkey"
+	"github.com/ntbloom/rainbase/pkg/paho"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -32,10 +36,17 @@ func (m *Messenger) Listen() {
 	// loop until signal
 	for {
 		select {
-		case closed := <-m.State:
-			if closed == configkey.SerialClosed {
+
+		case state := <-m.State:
+			switch state {
+			case configkey.SerialClosed:
 				logrus.Debug("received `Closed` signal, closing mqtt connection")
 				return
+			case configkey.SendStatusMessage:
+				logrus.Debug("requesting status message")
+				m.SendStatus()
+			default:
+				continue
 			}
 		case msg := <-m.Data:
 			logrus.Tracef("received Message from serial port: %s", msg.payload)
@@ -44,8 +55,65 @@ func (m *Messenger) Listen() {
 	}
 }
 
-// Publish send a Message over MQTT
+// Publish sends a Message over MQTT
 func (m *Messenger) Publish(msg *Message) {
 	logrus.Tracef("sending Message over MQTT: %s", msg.payload)
 	m.client.Publish(msg.topic, msg.qos, msg.retained, msg.payload)
+}
+
+// SendStatus sends a status message about the gateway and sensor at regular interval
+func (m *Messenger) SendStatus() {
+	// assume if this code is running that the gateway is up
+	gwStatus, _ := gatewayStatusMessage()
+	m.Publish(gwStatus)
+
+	sensorStatus, _ := sensorStatusMessage()
+	m.Publish(sensorStatus)
+}
+
+// get a status message about how the gateway is doing
+func gatewayStatusMessage() (*Message, error) {
+	gs := GatewayStatus{
+		Topic:     paho.GatewayStatus,
+		OK:        true,
+		Timestamp: time.Time{},
+	}
+	msg, err := gs.Process()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Message{
+		topic:    gs.Topic,
+		retained: false,
+		qos:      0,
+		payload:  msg,
+	}, nil
+}
+
+// get a status message about how the sensor is doing
+func sensorStatusMessage() (*Message, error) {
+	var up bool
+	port := viper.GetString(configkey.USBConnectionPort)
+	_, err := os.Stat(port)
+	if err != nil {
+		up = false
+	} else {
+		up = true
+	}
+	ss := SensorStatus{
+		Topic:     paho.SensorStatus,
+		OK:        up,
+		Timestamp: time.Time{},
+	}
+	msg, err := ss.Process()
+	if err != nil {
+		return nil, err
+	}
+	return &Message{
+		topic:    ss.Topic,
+		retained: false,
+		qos:      0,
+		payload:  msg,
+	}, nil
 }
