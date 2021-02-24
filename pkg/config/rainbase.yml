@@ -21,4 +21,5 @@ mqtt:
 sensor:
   rain:
     measurement:
-      inches: 0.11
+      mm: "0.2794"
+      inches: "0.11"

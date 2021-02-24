@@ -16,7 +16,8 @@ const (
 	MQTTClientKey         = "mqtt.certs.key"
 	MQTTConnectionTimeout = "mqtt.connection.timeout"
 
-	SensorRainInches = "sensor.rain.measurement.inches"
+	SensorRainCustomary = "sensor.rain.measurement.inches"
+	SensorRainMetric    = "sensor.rain.measurement.mm"
 )
 
 // random constants, not tied to config

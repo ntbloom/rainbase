@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/ntbloom/rainbase/pkg/config/configkey"
+	"github.com/spf13/viper"
+
 	"github.com/ntbloom/rainbase/pkg/paho"
 
 	"github.com/ntbloom/rainbase/pkg/tlv"
@@ -54,9 +57,9 @@ type TemperatureEvent struct {
 
 // RainEvent sends message about rain event
 type RainEvent struct {
-	Topic     string
-	Value     float32
-	Timestamp time.Time
+	Topic       string
+	Millimeters string // send as a string to avoid floating point weirdness
+	Timestamp   time.Time
 }
 
 // SensorStatus.Process turn static value into mqtt payload
@@ -92,7 +95,7 @@ func NewMessage(packet *tlv.TLV) (*Message, error) {
 	case tlv.Rain:
 		rain := RainEvent{
 			paho.RainTopic,
-			0.11,
+			viper.GetString(configkey.SensorRainMetric),
 			now,
 		}
 		payload, err = rain.Process()
