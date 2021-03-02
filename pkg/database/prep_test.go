@@ -68,7 +68,7 @@ func TestDatabasePrep(t *testing.T) {
 	}
 }
 
-// TestBackups can we create a backup for the file?
+// TestBackups just test that the backup is being made, not what's in it
 func TestDatabaseBackups(t *testing.T) {
 	//db := connectorFixture(t)
 }

@@ -3,7 +3,6 @@ package database
 // Prep a database.  This is essentially a test fixture but also to be called at the start of a new deployment
 import (
 	"database/sql"
-	"io/ioutil"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -14,48 +13,54 @@ import (
 const permissions = 0666
 
 type DBConnector struct {
-	db        *sql.DB
-	Name      string
-	BackupDir string
+	Db        *sql.DB  // pointer to sqlite file
+	File      *os.File // pointer to actual file
+	BaseName  string   // name of file without extension or directory
+	FullPath  string   // full POSIX path of sqlite file
+	BackupDir string   // full POSIX path of backup directory
 }
 
 // NewDBConnector makes a new databaseconnector struct
-func NewDBConnector(name, backupDir string, clobber bool) (*DBConnector, error) {
-	// delete and start fresh if necessary
+func NewDBConnector(fullPath, backupDir string, clobber bool) (*DBConnector, error) {
 	if clobber {
-		// remove the file and make it clean again
-		err := os.Remove(name)
+		err := os.Remove(fullPath)
 		if err != nil {
 			// ignore the error but log it
-			logrus.Debugf("%s doesn't exist; ignoring", name)
-		}
-		err = ioutil.WriteFile(name, nil, permissions)
-		if err != nil {
-			logrus.Error(err)
-			return nil, err
+			logrus.Debugf("%s doesn't exist; ignoring", fullPath)
 		}
 	}
-
-	// make the backup directory
-	err := os.MkdirAll(backupDir, permissions)
+	// make the file
+	file, err := os.Create(fullPath)
 	if err != nil {
+		logrus.Error(err)
 		return nil, err
 	}
+	baseName := "ADD/REGEX/HERE" // TODO: add me!
 
-	db, err := sql.Open("sqlite", name)
+	db, err := sql.Open("sqlite", fullPath)
 	if err != nil {
 		logrus.Errorf("problem opening database: %s", err)
 		return nil, err
 	}
 
+	// make the backup directory
+	err = os.MkdirAll(backupDir, permissions)
+	if err != nil {
+		return nil, err
+	}
+
 	return &DBConnector{
-		db:        db,
-		Name:      name,
+		Db:        db,
+		File:      file,
+		BaseName:  baseName,
+		FullPath:  fullPath,
 		BackupDir: backupDir,
 	}, nil
 }
 
 // Backup creates a backup file in d.BackupDir
 func (d *DBConnector) Backup() error {
+	//now := time.Now()
+	//timestamp := fmt.Sprintf("%s-%d", d.FullPath, now.Unix())
 	return nil
 }
