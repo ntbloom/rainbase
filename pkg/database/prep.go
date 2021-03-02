@@ -3,23 +3,48 @@ package database
 // Prep a database.  This is essentially a test fixture but also to be called at the start of a new deployment
 import (
 	"database/sql"
+	"io/ioutil"
+	"os"
 
 	"github.com/sirupsen/logrus"
 
 	_ "modernc.org/sqlite"
 )
 
-const (
-	SqliteProd = "/etc/rainbase/gateway-prod.db"
-	SqliteDev  = "/etc/rainbase/gateway-dev.db"
-)
+const permissions = 0666
 
-// NewSqliteFile initializes new file
-func NewSqliteFile(name string) (*sql.DB, error) {
+type DBConnector struct {
+	db        *sql.DB
+	Name      string
+	BackupDir string
+}
+
+// NewDBConnector makes a new databaseconnector struct
+func NewDBConnector(name, backupDir string, clobber bool) (*DBConnector, error) {
+	// delete and start fresh if necessary
+	if clobber {
+		// remove the file and make it clean again
+		err := os.Remove(name)
+		if err != nil {
+			// ignore the error but log it
+			logrus.Errorf("problem creating %s; ignoring", name)
+		}
+		err = ioutil.WriteFile(name, nil, permissions)
+		if err != nil {
+			logrus.Error(err)
+			return nil, err
+		}
+	}
+
 	db, err := sql.Open("sqlite", name)
 	if err != nil {
 		logrus.Errorf("problem opening database: %s", err)
 		return nil, err
 	}
-	return db, nil
+
+	return &DBConnector{
+		db:        db,
+		Name:      name,
+		BackupDir: backupDir,
+	}, nil
 }

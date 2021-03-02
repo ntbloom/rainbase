@@ -19,6 +19,11 @@ const (
 
 	SensorRainCustomary = "sensor.rain.measurement.inches"
 	SensorRainMetric    = "sensor.rain.measurement.mm"
+
+	DatabaseLocalProdFile      = "database.local.prod.file"
+	DatabaseLocalProdBackupDir = "database.local.prod.backup_directory"
+	DatabaseLocalDevFile       = "database.local.dev.file"
+	DatabaseLocalDevBackupDir  = "database.local.dev.backup_directory"
 )
 
 // random constants, not tied to config
