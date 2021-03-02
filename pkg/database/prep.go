@@ -27,13 +27,19 @@ func NewDBConnector(name, backupDir string, clobber bool) (*DBConnector, error) 
 		err := os.Remove(name)
 		if err != nil {
 			// ignore the error but log it
-			logrus.Errorf("problem creating %s; ignoring", name)
+			logrus.Debugf("%s doesn't exist; ignoring", name)
 		}
 		err = ioutil.WriteFile(name, nil, permissions)
 		if err != nil {
 			logrus.Error(err)
 			return nil, err
 		}
+	}
+
+	// make the backup directory
+	err := os.MkdirAll(backupDir, permissions)
+	if err != nil {
+		return nil, err
 	}
 
 	db, err := sql.Open("sqlite", name)
@@ -47,4 +53,9 @@ func NewDBConnector(name, backupDir string, clobber bool) (*DBConnector, error) 
 		Name:      name,
 		BackupDir: backupDir,
 	}, nil
+}
+
+// Backup creates a backup file in d.BackupDir
+func (d *DBConnector) Backup() error {
+	return nil
 }

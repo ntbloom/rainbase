@@ -4,6 +4,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/spf13/viper"
 
 	"github.com/ntbloom/rainbase/pkg/config/configkey"
@@ -27,12 +29,12 @@ func removeDir(dir string) {
 	_ = os.RemoveAll(dir)
 }
 
-// connector fixture for DBConnector
-func connector(t *testing.T) *database.DBConnector {
+// connectorFixture makes a reusable DBConnector object
+func connectorFixture(t *testing.T) *database.DBConnector {
 	getConfig(t)
 	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
 	backupDir := viper.GetString(configkey.DatabaseLocalDevBackupDir)
-	db, _ := database.NewDBConnector(sqliteFile, backupDir, false)
+	db, _ := database.NewDBConnector(sqliteFile, backupDir, true)
 	return db
 }
 
@@ -50,10 +52,17 @@ func TestDatabasePrep(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		db, err := database.NewDBConnector(sqliteFile, backupDir, true)
 		if err != nil || db == nil {
+			logrus.Error("unable to create DBConnector")
 			t.Fail()
 		}
 		_, err = os.Stat(sqliteFile)
 		if err != nil {
+			logrus.Errorf("%s not created", sqliteFile)
+			t.Fail()
+		}
+		_, err = os.Stat(backupDir)
+		if err != nil {
+			logrus.Errorf("%s not created", backupDir)
 			t.Fail()
 		}
 	}
@@ -61,6 +70,5 @@ func TestDatabasePrep(t *testing.T) {
 
 // TestBackups can we create a backup for the file?
 func TestDatabaseBackups(t *testing.T) {
-	getConfig(t)
-
+	//db := connectorFixture(t)
 }
