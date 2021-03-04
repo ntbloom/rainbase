@@ -11,20 +11,6 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-const (
-	//nolint
-	sqlschema = `
-BEGIN TRANSACTION;
-DROP TABLE IF EXISTS packet;
-CREATE TABLE packet 
-id INT PRIMARY KEY SERIAL,
-tag INT NOT NULL,
-value INT NOT NULL,
-timestamp TEXT --created by go;
-COMMIT;
-`
-)
-
 const permissions = 0666
 
 type DBConnector struct {
@@ -46,11 +32,20 @@ func NewDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 		return nil, err
 	}
 
-	return &DBConnector{
+	// make a DBConnector object and make the schema if necessary
+	db := DBConnector{
 		file:     file,
 		fullPath: fullPath,
 		ctx:      context.Background(),
-	}, nil
+	}
+	if clobber {
+		_, err = db.makeSchema()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &db, nil
 }
 
 // exec runs sql command on the database without returning rows
@@ -72,10 +67,12 @@ func (d *DBConnector) exec(cmd string) (sql.Result, error) {
 	// connect to the database
 	db, err := sql.Open("sqlite", d.fullPath)
 	if err != nil {
+		logrus.Error("unable to open database")
 		return nil, err
 	}
 	conn, err = db.Conn(d.ctx)
 	if err != nil {
+		logrus.Error("unable to get a connection struct")
 		return nil, err
 	}
 	return conn.ExecContext(d.ctx, cmd)

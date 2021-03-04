@@ -53,5 +53,4 @@ func TestDatabasePrep(t *testing.T) {
 //
 func TestSchema(t *testing.T) {
 	connectorFixture(t)
-
 }
