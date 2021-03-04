@@ -5,7 +5,6 @@ package database
 const (
 	//nolint
 	sqlschema = `
-PRAGMA foreign_keys = ON; --required 
 BEGIN TRANSACTION;
 DROP TABLE IF EXISTS mappings;
 CREATE TABLE mappings (
@@ -33,9 +32,6 @@ CREATE TABLE log (
 	timestamp TEXT NOT NULL, --created by go
 	FOREIGN KEY (tag) REFERENCES mappings(id)
 );
-
-INSERT INTO log (tag, value, timestamp)
-VALUES (7,1,"timestamp");
 
 COMMIT;
 `

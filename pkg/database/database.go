@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 
@@ -12,6 +13,7 @@ import (
 )
 
 const permissions = 0666
+const foreignKey = `PRAGMA foreign_keys = ON;`
 
 type DBConnector struct {
 	file     *os.File        // pointer to actual file
@@ -48,8 +50,8 @@ func NewDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 	return &db, nil
 }
 
-// exec runs sql command on the database without returning rows
-func (d *DBConnector) exec(cmd string) (sql.Result, error) {
+// Exec runs sql command on the database without returning rows
+func (d *DBConnector) Exec(cmd string) (sql.Result, error) {
 	// get variables ready
 	var (
 		db   *sql.DB
@@ -75,10 +77,14 @@ func (d *DBConnector) exec(cmd string) (sql.Result, error) {
 		logrus.Error("unable to get a connection struct")
 		return nil, err
 	}
-	return conn.ExecContext(d.ctx, cmd)
+
+	// enforce foreign keys
+	safeCmd := strings.Join([]string{foreignKey, cmd}, " ")
+
+	return conn.ExecContext(d.ctx, safeCmd)
 }
 
 // makeSchema puts the schema in the sqlite file
 func (d *DBConnector) makeSchema() (sql.Result, error) {
-	return d.exec(sqlschema)
+	return d.Exec(sqlschema)
 }

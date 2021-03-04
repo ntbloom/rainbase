@@ -27,7 +27,7 @@ func connectorFixture(t *testing.T) *database.DBConnector {
 	return db
 }
 
-// TestDataBasePrep create and destroy sqlite file 5 times, get DBCOnnector struct
+// create and destroy sqlite file 5 times, get DBCOnnector struct
 func TestDatabasePrep(t *testing.T) {
 	getConfig(t)
 	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
@@ -50,7 +50,13 @@ func TestDatabasePrep(t *testing.T) {
 	}
 }
 
-//
-func TestSchema(t *testing.T) {
-	connectorFixture(t)
+// make sure foreign key contraints are enforced
+func TestForeignKeysEnforced(t *testing.T) {
+	db := connectorFixture(t)
+	illegal := `INSERT INTO log (tag, value, timestamp) VALUES (99999,1,"timestamp");`
+	res, err := db.Exec(illegal)
+	if res != nil || err == nil {
+		logrus.Error("sqlite is not enforcing foreign_key constraints")
+		t.Fail()
+	}
 }
