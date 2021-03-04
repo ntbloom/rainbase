@@ -29,7 +29,5 @@ database:
   local:
     prod:
       file: /etc/rainbase/rainbase-gateway-prod.db
-      backup_directory: /etc/rainbase/backups
     dev:
       file: /tmp/rainbase.db
-      backup_directory: /tmp/backups

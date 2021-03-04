@@ -33,8 +33,7 @@ func removeDir(dir string) {
 func connectorFixture(t *testing.T) *database.DBConnector {
 	getConfig(t)
 	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
-	backupDir := viper.GetString(configkey.DatabaseLocalDevBackupDir)
-	db, _ := database.NewDBConnector(sqliteFile, backupDir, true)
+	db, _ := database.NewDBConnector(sqliteFile, true)
 	return db
 }
 
@@ -42,33 +41,21 @@ func connectorFixture(t *testing.T) *database.DBConnector {
 func TestDatabasePrep(t *testing.T) {
 	getConfig(t)
 	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
-	backupDir := viper.GetString(configkey.DatabaseLocalDevBackupDir)
 
 	// clean up when finished
 	defer removeFile(sqliteFile)
-	defer removeDir(backupDir)
 
 	// create and destroy 5 times
 	for i := 0; i < 5; i++ {
-		db, err := database.NewDBConnector(sqliteFile, backupDir, true)
+		db, err := database.NewDBConnector(sqliteFile, true)
 		if err != nil || db == nil {
-			logrus.Error("unable to create DBConnector")
-			t.Fail()
+			logrus.Error("database not created")
+			t.Error(err)
 		}
 		_, err = os.Stat(sqliteFile)
 		if err != nil {
-			logrus.Errorf("%s not created", sqliteFile)
-			t.Fail()
-		}
-		_, err = os.Stat(backupDir)
-		if err != nil {
-			logrus.Errorf("%s not created", backupDir)
-			t.Fail()
+			logrus.Error("sqlite file doesn't exist")
+			t.Error(err)
 		}
 	}
-}
-
-// TestBackups just test that the backup is being made, not what's in it
-func TestDatabaseBackups(t *testing.T) {
-	//db := connectorFixture(t)
 }
