@@ -19,16 +19,6 @@ func getConfig(t *testing.T) {
 	config.Configure()
 }
 
-// helper function removes file
-func removeFile(file string) {
-	_ = os.Remove(file)
-}
-
-// helper function removes backup directory
-func removeDir(dir string) {
-	_ = os.RemoveAll(dir)
-}
-
 // connectorFixture makes a reusable DBConnector object
 func connectorFixture(t *testing.T) *database.DBConnector {
 	getConfig(t)
@@ -37,13 +27,13 @@ func connectorFixture(t *testing.T) *database.DBConnector {
 	return db
 }
 
-// TestDBPrep create and destroy sqlite file 5 times
+// TestDataBasePrep create and destroy sqlite file 5 times, get DBCOnnector struct
 func TestDatabasePrep(t *testing.T) {
 	getConfig(t)
 	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
 
 	// clean up when finished
-	defer removeFile(sqliteFile)
+	defer func() { _ = os.Remove(sqliteFile) }()
 
 	// create and destroy 5 times
 	for i := 0; i < 5; i++ {
@@ -58,4 +48,10 @@ func TestDatabasePrep(t *testing.T) {
 			t.Error(err)
 		}
 	}
+}
+
+//
+func TestSchema(t *testing.T) {
+	connectorFixture(t)
+
 }
