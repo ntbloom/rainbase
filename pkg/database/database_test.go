@@ -66,11 +66,11 @@ func TestForeignKeysEnforced(t *testing.T) {
 
 // make sure Entry.Record() interface is implemented correcly
 func TestRainEntry(t *testing.T) {
+	db := connectorFixture(t)
+	var total int
 	test := func(reps uint8) bool {
-		db := connectorFixture(t)
 		count := int(reps)
-		logrus.Debugf("count=%d", count)
-		var val int
+		//logrus.Debugf("count=%d, total=%d", count, total)
 
 		for i := 0; i < count; i++ {
 			if res, err := db.MakeRainEntry(); err != nil || res == nil {
@@ -78,29 +78,18 @@ func TestRainEntry(t *testing.T) {
 				return false
 			}
 		}
+		var val int
 		if val = db.GetRainEntries(); val == -1 {
 			logrus.Error("gave -1")
 			return false
 		}
-		logrus.Debugf("val=%d", val)
-		return val == count
+		logrus.Debugf("val=%d, count=%d, total=%d", val, count, total)
+		total += count
+		return val == total
 	}
 	if err := quick.Check(test, &quick.Config{
-		MaxCount: 15,
+		MaxCount: 5,
 	}); err != nil {
 		t.Error(err)
 	}
 }
-
-//func TestRainEntry(t *testing.T) {
-//	db := connectorFixture(t)
-//	count := 10
-//	for i := 0; i < count; i++ {
-//		if res, err := db.MakeRainEntry(); err != nil || res == nil {
-//			t.Error(err)
-//		}
-//	}
-//	if val := db.GetRainEntries(); val == -1 {
-//		t.Error("-1")
-//	}
-//}
