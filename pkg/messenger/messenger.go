@@ -36,7 +36,6 @@ func (m *Messenger) Listen() {
 	// loop until signal
 	for {
 		select {
-
 		case state := <-m.State:
 			switch state {
 			case configkey.SerialClosed:

@@ -43,7 +43,6 @@ func listen(duration int) {
 			time.Sleep(time.Second)
 			logrus.Tracef("sleep #%d", i+1)
 		}
-		//msgr.State <- configkey.SendStatusMessage // how to send a status message
 		conn.State <- configkey.SerialClosed
 		msgr.State <- configkey.SerialClosed
 	}

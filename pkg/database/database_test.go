@@ -18,13 +18,13 @@ import (
 /* FIXTURES */
 
 // reusable configs
-func getConfig(t *testing.T) {
+func getConfig() {
 	config.Configure()
 }
 
 // connectorFixture makes a reusable DBConnector object
-func connectorFixture(t *testing.T) *database.DBConnector {
-	getConfig(t)
+func connectorFixture() *database.DBConnector {
+	getConfig()
 	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
 	db, _ := database.NewDBConnector(sqliteFile, true)
 	return db
@@ -34,7 +34,7 @@ func connectorFixture(t *testing.T) *database.DBConnector {
 
 // create and destroy sqlite file 5 times, get DBCOnnector struct
 func TestDatabasePrep(t *testing.T) {
-	getConfig(t)
+	getConfig()
 	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
 
 	// clean up when finished
@@ -57,21 +57,19 @@ func TestDatabasePrep(t *testing.T) {
 
 // make sure foreign key contraints are enforced
 func TestForeignKeysEnforced(t *testing.T) {
-	db := connectorFixture(t)
+	db := connectorFixture()
 	if foreignKeys := db.ForeignKeysAreImplemented(); !foreignKeys {
 		logrus.Error("sqlite is not enforcing foreign_key constraints")
 		t.Fail()
 	}
 }
 
-// make sure Entry.Record() interface is implemented correcly
+// Property-based test for creating a bunch of rows and making sure the data get put in
 func TestRainEntry(t *testing.T) {
-	db := connectorFixture(t)
+	db := connectorFixture()
 	var total int
 	test := func(reps uint8) bool {
 		count := int(reps)
-		//logrus.Debugf("count=%d, total=%d", count, total)
-
 		for i := 0; i < count; i++ {
 			if res, err := db.MakeRainEntry(); err != nil || res == nil {
 				logrus.Error(err)

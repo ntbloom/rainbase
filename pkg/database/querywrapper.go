@@ -29,7 +29,6 @@ func (db *DBConnector) newConnection() (*connection, error) {
 	if err != nil {
 		logrus.Error("unable to open database")
 		return nil, err
-
 	}
 
 	// make a Conn
@@ -93,11 +92,12 @@ func (db *DBConnector) tally(tag int) int {
 		}
 		results = append(results, val)
 	}
+
 	return results[0]
 }
 
 // addRecord makes an entry into the databse
-func (db *DBConnector) addRecord(tag int, value int) (sql.Result, error) {
+func (db *DBConnector) addRecord(tag, value int) (sql.Result, error) {
 	timestamp := time.Now().Format(time.RFC3339)
 	cmd := fmt.Sprintf("INSERT INTO log (tag, value, timestamp) VALUES (%d, %d, \"%s\");", tag, value, timestamp)
 	return db.enterData(cmd)

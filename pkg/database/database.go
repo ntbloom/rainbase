@@ -10,10 +10,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	_ "modernc.org/sqlite"
+	_ "modernc.org/sqlite" // driver for sqlite
 )
 
-const permissions = 0666
 const foreignKey = `PRAGMA foreign_keys = ON;`
 
 type DBConnector struct {
