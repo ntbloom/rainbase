@@ -3,6 +3,7 @@ package database_test
 import (
 	"os"
 	"testing"
+	"testing/quick"
 
 	"github.com/sirupsen/logrus"
 
@@ -65,7 +66,41 @@ func TestForeignKeysEnforced(t *testing.T) {
 
 // make sure Entry.Record() interface is implemented correcly
 func TestRainEntry(t *testing.T) {
-	//db := connectorFixture(t)
-	//res, err := db.MakeRainEntry()
+	test := func(reps uint8) bool {
+		db := connectorFixture(t)
+		count := int(reps)
+		logrus.Debugf("count=%d", count)
+		var val int
 
+		for i := 0; i < count; i++ {
+			if res, err := db.MakeRainEntry(); err != nil || res == nil {
+				logrus.Error(err)
+				return false
+			}
+		}
+		if val = db.GetRainEntries(); val == -1 {
+			logrus.Error("gave -1")
+			return false
+		}
+		logrus.Debugf("val=%d", val)
+		return val == count
+	}
+	if err := quick.Check(test, &quick.Config{
+		MaxCount: 15,
+	}); err != nil {
+		t.Error(err)
+	}
 }
+
+//func TestRainEntry(t *testing.T) {
+//	db := connectorFixture(t)
+//	count := 10
+//	for i := 0; i < count; i++ {
+//		if res, err := db.MakeRainEntry(); err != nil || res == nil {
+//			t.Error(err)
+//		}
+//	}
+//	if val := db.GetRainEntries(); val == -1 {
+//		t.Error("-1")
+//	}
+//}
