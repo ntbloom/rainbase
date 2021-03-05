@@ -14,6 +14,8 @@ import (
 	"github.com/ntbloom/rainbase/pkg/database"
 )
 
+/* FIXTURES */
+
 // reusable configs
 func getConfig(t *testing.T) {
 	config.Configure()
@@ -26,6 +28,8 @@ func connectorFixture(t *testing.T) *database.DBConnector {
 	db, _ := database.NewDBConnector(sqliteFile, true)
 	return db
 }
+
+/* TESTS */
 
 // create and destroy sqlite file 5 times, get DBCOnnector struct
 func TestDatabasePrep(t *testing.T) {
@@ -53,10 +57,15 @@ func TestDatabasePrep(t *testing.T) {
 // make sure foreign key contraints are enforced
 func TestForeignKeysEnforced(t *testing.T) {
 	db := connectorFixture(t)
-	illegal := `INSERT INTO log (tag, value, timestamp) VALUES (99999,1,"timestamp");`
-	res, err := db.Exec(illegal)
-	if res != nil || err == nil {
+	if foreignKeys := db.ForeignKeysAreImplemented(); !foreignKeys {
 		logrus.Error("sqlite is not enforcing foreign_key constraints")
 		t.Fail()
 	}
+}
+
+// make sure Entry.Record() interface is implemented correcly
+func TestRainEntry(t *testing.T) {
+	//db := connectorFixture(t)
+	//res, err := db.MakeRainEntry()
+
 }

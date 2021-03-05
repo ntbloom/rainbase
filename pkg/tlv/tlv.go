@@ -24,6 +24,15 @@ const (
 	Unpause     = 5
 )
 
+// values for TLV packets
+const (
+	RainValue      = 1
+	SoftResetValue = 1
+	HardResetValue = 1
+	PauseValue     = 1
+	UnpauseValue   = 1
+)
+
 // packet length for determining how to process value
 const (
 	constant = 1
