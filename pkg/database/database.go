@@ -84,8 +84,9 @@ func (db *DBConnector) enterData(cmd string) (sql.Result, error) {
 	// enforce foreign keys
 	safeCmd := strings.Join([]string{foreignKey, cmd}, " ")
 
-	db.Lock()
-	defer db.Unlock()
+	// Disabled for now but determine if mutex is necessary or if SQLITE handles concurrent writes properly
+	// db.Lock()
+	// defer db.Unlock()
 	if c, err = db.newConnection(); err != nil {
 		return nil, err
 	}
@@ -101,8 +102,9 @@ func (db *DBConnector) tally(tag int) int {
 
 	query := fmt.Sprintf("SELECT COUNT(*) FROM log WHERE tag = %d;", tag)
 
-	db.Lock()
-	defer db.Unlock()
+	// Disabled for now but determine if mutex is necessary or if SQLITE handles concurrent writes properly
+	// db.Lock()
+	// defer db.Unlock()
 	c, _ := db.newConnection() // don't handle the error, just return -1
 	defer c.disconnect()
 

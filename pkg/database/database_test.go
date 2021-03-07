@@ -2,8 +2,10 @@ package database_test
 
 import (
 	"os"
+	"sync"
 	"testing"
 	"testing/quick"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -66,11 +68,11 @@ func TestForeignKeysEnforced(t *testing.T) {
 
 // Property-based test for creating a bunch of rows and making sure the data get put in
 func TestRainEntry(t *testing.T) {
-	var count int
+	var maxCount int
 	if testing.Short() {
-		count = 1
+		maxCount = 1
 	} else {
-		count = 5
+		maxCount = 5
 	}
 
 	db := connectorFixture()
@@ -93,8 +95,53 @@ func TestRainEntry(t *testing.T) {
 		return val == total
 	}
 	if err := quick.Check(test, &quick.Config{
-		MaxCount: count,
+		MaxCount: maxCount,
 	}); err != nil {
 		t.Error(err)
+	}
+}
+
+// test concurrency
+func TestConcurrentEntries(t *testing.T) {
+	db := connectorFixture()
+	expected := 5
+	timeout := 5
+	total := make(chan int)
+	var mu sync.Mutex
+	tally := 0
+
+	// loop <count> times
+	for i := 0; i < expected; i++ {
+		go func() {
+			_, err := db.MakeRainEntry()
+			if err != nil {
+				t.Error(err)
+			}
+			mu.Lock()
+			tally++
+			total <- tally
+			mu.Unlock()
+		}()
+	}
+	// wait for them to finish
+
+	var collected bool
+	for i := timeout; i != 0; i-- {
+		finished := <-total
+		logrus.Info(finished)
+		if finished == expected {
+			collected = true
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	if !collected {
+		logrus.Error("all loops not finished")
+		t.Fail()
+	}
+	actual := db.GetRainEntries()
+	if actual != expected {
+		logrus.Errorf("actual=%d, expected=%d", actual, expected)
+		t.Fail()
 	}
 }
