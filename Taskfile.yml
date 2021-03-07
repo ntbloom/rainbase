@@ -16,6 +16,17 @@ tasks:
     cmds:
       - go test ./... | grep -v "no test files"
 
+  race:
+    desc: Run test suite with race checker
+    cmds:
+      - go clean -testcache
+      - go test -race ./... | grep -v "no test files"
+
+  short:
+    desc: Run short test suite without caching
+    cmds:
+      - go test -short ./... | grep -v "no test files"
+
   run:
     desc: run the binary
     cmds:

@@ -4,7 +4,11 @@ package database
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"os"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/ntbloom/rainbase/pkg/tlv"
 
@@ -16,9 +20,10 @@ import (
 const foreignKey = `PRAGMA foreign_keys = ON;`
 
 type DBConnector struct {
-	file     *os.File        // pointer to actual file
-	fullPath string          // full POSIX path of sqlite file
-	ctx      context.Context // background context
+	file       *os.File        // pointer to actual file
+	fullPath   string          // full POSIX path of sqlite file
+	ctx        context.Context // background context
+	sync.Mutex                 // access the database serially
 }
 
 // NewDBConnector makes a new databaseconnector struct
@@ -69,4 +74,63 @@ func (db *DBConnector) GetRainEntries() int {
 // makeSchema puts the schema in the sqlite file
 func (db *DBConnector) makeSchema() (sql.Result, error) {
 	return db.enterData(sqlschema)
+}
+
+// enterData enters data into the database without returning any rows
+func (db *DBConnector) enterData(cmd string) (sql.Result, error) {
+	var c *connection
+	var err error
+
+	// enforce foreign keys
+	safeCmd := strings.Join([]string{foreignKey, cmd}, " ")
+
+	db.Lock()
+	defer db.Unlock()
+	if c, err = db.newConnection(); err != nil {
+		return nil, err
+	}
+	defer c.disconnect()
+
+	return c.conn.ExecContext(db.ctx, safeCmd)
+}
+
+// tally runs sql command to tally database entries for a given topic; essentially a dummy function for testing
+func (db *DBConnector) tally(tag int) int {
+	var rows *sql.Rows
+	var err error
+
+	query := fmt.Sprintf("SELECT COUNT(*) FROM log WHERE tag = %d;", tag)
+
+	db.Lock()
+	defer db.Unlock()
+	c, _ := db.newConnection() // don't handle the error, just return -1
+	defer c.disconnect()
+
+	if rows, err = c.conn.QueryContext(db.ctx, query); err != nil {
+		return -1
+	}
+	closed := func() {
+		if err = rows.Close(); err != nil {
+			logrus.Error(err)
+		}
+	}
+	defer closed()
+	results := make([]int, 0)
+	for rows.Next() {
+		var val int
+		if err = rows.Scan(&val); err != nil {
+			logrus.Error(err)
+			return -1
+		}
+		results = append(results, val)
+	}
+
+	return results[0]
+}
+
+// addRecord makes an entry into the databse
+func (db *DBConnector) addRecord(tag, value int) (sql.Result, error) {
+	timestamp := time.Now().Format(time.RFC3339)
+	cmd := fmt.Sprintf("INSERT INTO log (tag, value, timestamp) VALUES (%d, %d, \"%s\");", tag, value, timestamp)
+	return db.enterData(cmd)
 }

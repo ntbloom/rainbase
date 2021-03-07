@@ -66,6 +66,13 @@ func TestForeignKeysEnforced(t *testing.T) {
 
 // Property-based test for creating a bunch of rows and making sure the data get put in
 func TestRainEntry(t *testing.T) {
+	var count int
+	if testing.Short() {
+		count = 1
+	} else {
+		count = 5
+	}
+
 	db := connectorFixture()
 	var total int
 	test := func(reps uint8) bool {
@@ -86,7 +93,7 @@ func TestRainEntry(t *testing.T) {
 		return val == total
 	}
 	if err := quick.Check(test, &quick.Config{
-		MaxCount: 5,
+		MaxCount: count,
 	}); err != nil {
 		t.Error(err)
 	}
