@@ -54,6 +54,60 @@ func NewDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 	return &db, nil
 }
 
+/* SQL LOG ENTRIES */
+
+// MakeRainEntry addRecord a rain event
+func (db *DBConnector) MakeRainEntry() (sql.Result, error) {
+	return db.addRecord(tlv.Rain, tlv.RainValue)
+}
+
+func (db *DBConnector) GetRainEntries() int {
+	return db.tally(tlv.Rain)
+}
+
+// MakeSoftResetEntry addRecord a soft reset event
+func (db *DBConnector) MakeSoftResetEntry() (sql.Result, error) {
+	return db.addRecord(tlv.SoftReset, tlv.SoftResetValue)
+}
+
+func (db *DBConnector) GetSoftResetEntries() int {
+	return db.tally(tlv.SoftReset)
+}
+
+// MakeHardResetEntry addRecord a hard reset event
+func (db *DBConnector) MakeHardResetEntry() (sql.Result, error) {
+	return db.addRecord(tlv.HardReset, tlv.HardResetValue)
+}
+
+func (db *DBConnector) GetHardResetEntries() int {
+	return db.tally(tlv.HardReset)
+}
+
+// MakePauseEntry addRecord a pause event
+func (db *DBConnector) MakePauseEntry() (sql.Result, error) {
+	return db.addRecord(tlv.Pause, tlv.Unpause)
+}
+
+func (db *DBConnector) GetPauseEntries() int {
+	return db.tally(tlv.Pause)
+}
+
+// MakeUnpauseEntry addRecord an unpause event
+func (db *DBConnector) MakeUnpauseEntry() (sql.Result, error) {
+	return db.addRecord(tlv.Unpause, tlv.UnpauseValue)
+}
+
+func (db *DBConnector) GetUnpauseEntires() int {
+	return db.tally(tlv.Unpause)
+}
+
+// MakeTemperatureEntry addRecord a temperature measurement
+func (db *DBConnector) MakeTemperatureEntry(tempC int) (sql.Result, error) {
+	return db.addRecord(tlv.Temperature, tempC)
+}
+
+/* SELECTED METHODS EXPORTED FOR TEST/VERIFICATION */
+
 // ForeignKeysAreImplemented, test function to ensure foreign key implementation
 func (db *DBConnector) ForeignKeysAreImplemented() bool {
 	illegal := `INSERT INTO log (tag, value, timestamp) VALUES (99999,1,"timestamp");`
@@ -61,15 +115,7 @@ func (db *DBConnector) ForeignKeysAreImplemented() bool {
 	return res == nil && err != nil
 }
 
-// MakeRainEntry addRecord a rain event
-func (db *DBConnector) MakeRainEntry() (sql.Result, error) {
-	return db.addRecord(tlv.Rain, tlv.RainValue)
-}
-
-// GetRainEntries get total rain events
-func (db *DBConnector) GetRainEntries() int {
-	return db.tally(tlv.Rain)
-}
+/* HELPER METHODS */
 
 // makeSchema puts the schema in the sqlite file
 func (db *DBConnector) makeSchema() (sql.Result, error) {

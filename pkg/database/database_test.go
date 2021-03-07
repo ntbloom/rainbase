@@ -123,8 +123,8 @@ func TestConcurrentEntries(t *testing.T) {
 			mu.Unlock()
 		}()
 	}
-	// wait for them to finish
 
+	// wait for them to finish
 	var collected bool
 	for i := timeout; i != 0; i-- {
 		finished := <-total
@@ -142,6 +142,93 @@ func TestConcurrentEntries(t *testing.T) {
 	actual := db.GetRainEntries()
 	if actual != expected {
 		logrus.Errorf("actual=%d, expected=%d", actual, expected)
+		t.Fail()
+	}
+}
+
+// Tests all the various entries work (except temperature)
+func TestStaticSQLEntries(t *testing.T) {
+	db := connectorFixture()
+
+	count := 5
+	timeout := 30
+
+	var rain, soft, hard, pause, unpause int
+	var err error
+	check := func(e error) {
+		if e != nil {
+			t.Error(err)
+		}
+	}
+	total := make(chan int)
+	tally := 0
+	var mu sync.Mutex
+
+	// TODO: Refactor with cleaner function and waitgroups
+	for i := 0; i < count; i++ {
+		go func() {
+			_, err = db.MakeRainEntry()
+			check(err)
+			mu.Lock()
+			tally++
+			total <- tally
+			mu.Unlock()
+		}()
+		go func() {
+			_, err = db.MakeSoftResetEntry()
+			check(err)
+			mu.Lock()
+			tally++
+			total <- tally
+			mu.Unlock()
+		}()
+		go func() {
+			_, err = db.MakeHardResetEntry()
+			check(err)
+			mu.Lock()
+			tally++
+			total <- tally
+			mu.Unlock()
+		}()
+		go func() {
+			_, err = db.MakePauseEntry()
+			check(err)
+			mu.Lock()
+			tally++
+			total <- tally
+			mu.Unlock()
+		}()
+		go func() {
+			_, err = db.MakeUnpauseEntry()
+			check(err)
+			mu.Lock()
+			tally++
+			total <- tally
+			mu.Unlock()
+		}()
+	}
+	// wait for entries to finish
+	done := false
+	for i := timeout; i != 0; i-- {
+		finished := <-total
+		logrus.Info(finished)
+		if finished == count*5 {
+			done = true
+			break
+		}
+		time.Sleep(1 * time.Second)
+	}
+	if !done {
+		t.Fail()
+	}
+
+	rain = db.GetRainEntries()
+	soft = db.GetSoftResetEntries()
+	hard = db.GetHardResetEntries()
+	pause = db.GetPauseEntries()
+	unpause = db.GetUnpauseEntires()
+
+	if rain != count || soft != count || hard != count || pause != count || unpause != count {
 		t.Fail()
 	}
 }
