@@ -19,9 +19,9 @@ import (
 const foreignKey = `PRAGMA foreign_keys = ON;`
 
 type DBConnector struct {
-	file       *os.File        // pointer to actual file
-	fullPath   string          // full POSIX path of sqlite file
-	ctx        context.Context // background context
+	file     *os.File        // pointer to actual file
+	fullPath string          // full POSIX path of sqlite file
+	ctx      context.Context // background context
 	//sync.Mutex                 // access the database serially
 }
 
@@ -96,13 +96,18 @@ func (db *DBConnector) MakeUnpauseEntry() (sql.Result, error) {
 	return db.addRecord(tlv.Unpause, tlv.UnpauseValue)
 }
 
-func (db *DBConnector) GetUnpauseEntires() int {
+func (db *DBConnector) GetUnpauseEntries() int {
 	return db.tally(tlv.Unpause)
 }
 
 // MakeTemperatureEntry addRecord a temperature measurement
 func (db *DBConnector) MakeTemperatureEntry(tempC int) (sql.Result, error) {
 	return db.addRecord(tlv.Temperature, tempC)
+}
+
+//
+func (db *DBConnector) GetLastTemperatureEntry() int {
+	return db.getLastRecord(tlv.Temperature)
 }
 
 /* SELECTED METHODS EXPORTED FOR TEST/VERIFICATION */
@@ -128,10 +133,6 @@ func (db *DBConnector) enterData(cmd string) (sql.Result, error) {
 
 	// enforce foreign keys
 	safeCmd := strings.Join([]string{foreignKey, cmd}, " ")
-
-	// Disabled for now but determine if mutex is necessary or if SQLITE handles concurrent writes properly
-	// db.Lock()
-	// defer db.Unlock()
 	if c, err = db.newConnection(); err != nil {
 		return nil, err
 	}
@@ -140,16 +141,35 @@ func (db *DBConnector) enterData(cmd string) (sql.Result, error) {
 	return c.conn.ExecContext(db.ctx, safeCmd)
 }
 
-// tally runs sql command to tally database entries for a given topic; essentially a dummy function for testing
+// addRecord makes an entry into the databse
+// base command for all logging
+func (db *DBConnector) addRecord(tag, value int) (sql.Result, error) {
+	timestamp := time.Now().Format(time.RFC3339)
+	cmd := fmt.Sprintf("INSERT INTO log (tag, value, timestamp) VALUES (%d, %d, \"%s\");", tag, value, timestamp)
+	return db.enterData(cmd)
+}
+
+/* QUERYING METHODS, MOSTLY FOR TESTING */
+
+// tally runs sql command to count database entries for a given topic
 func (db *DBConnector) tally(tag int) int {
+	query := fmt.Sprintf("SELECT COUNT(*) FROM log WHERE tag = %d;", tag)
+	return db.getSingleInt(query)
+}
+
+// getLastRecord gets the last record for a given tag
+func (db *DBConnector) getLastRecord(tag int) int {
+	cmd := fmt.Sprintf(`SELECT value FROM log WHERE tag = %d ORDER BY id DESC LIMIT 1;`, tag)
+	return db.getSingleInt(cmd)
+
+}
+
+// getSingleInt returns the first result of any SQL query that gives at least one integer result
+// simple function for confirming correct value was entered for, say, temperature
+func (db *DBConnector) getSingleInt(query string) int {
 	var rows *sql.Rows
 	var err error
 
-	query := fmt.Sprintf("SELECT COUNT(*) FROM log WHERE tag = %d;", tag)
-
-	// Disabled for now but determine if mutex is necessary or if SQLITE handles concurrent writes properly
-	// db.Lock()
-	// defer db.Unlock()
 	c, _ := db.newConnection() // don't handle the error, just return -1
 	defer c.disconnect()
 
@@ -173,11 +193,4 @@ func (db *DBConnector) tally(tag int) int {
 	}
 
 	return results[0]
-}
-
-// addRecord makes an entry into the databse
-func (db *DBConnector) addRecord(tag, value int) (sql.Result, error) {
-	timestamp := time.Now().Format(time.RFC3339)
-	cmd := fmt.Sprintf("INSERT INTO log (tag, value, timestamp) VALUES (%d, %d, \"%s\");", tag, value, timestamp)
-	return db.enterData(cmd)
 }

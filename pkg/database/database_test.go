@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 	"testing/quick"
-	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -69,11 +68,12 @@ func TestForeignKeysEnforced(t *testing.T) {
 
 // Property-based test for creating a bunch of rows and making sure the data get put in
 func TestRainEntry(t *testing.T) {
-	var maxCount int
+	maxCount := 5
 	if testing.Short() {
-		maxCount = 1
+		logrus.Info("skipping property tests")
+		return
 	} else {
-		maxCount = 5
+		logrus.Info("doing full property test")
 	}
 
 	db := connectorFixture()
@@ -102,52 +102,7 @@ func TestRainEntry(t *testing.T) {
 	}
 }
 
-// test concurrency
-func TestConcurrentEntries(t *testing.T) {
-	db := connectorFixture()
-	expected := 5
-	timeout := 5
-	total := make(chan int)
-	var mu sync.Mutex
-	tally := 0
-
-	// loop <count> times
-	for i := 0; i < expected; i++ {
-		go func() {
-			_, err := db.MakeRainEntry()
-			if err != nil {
-				t.Error(err)
-			}
-			mu.Lock()
-			tally++
-			total <- tally
-			mu.Unlock()
-		}()
-	}
-
-	// wait for them to finish
-	var collected bool
-	for i := timeout; i != 0; i-- {
-		finished := <-total
-		logrus.Info(finished)
-		if finished == expected {
-			collected = true
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
-	if !collected {
-		logrus.Error("all loops not finished")
-		t.Fail()
-	}
-	actual := db.GetRainEntries()
-	if actual != expected {
-		logrus.Errorf("actual=%d, expected=%d", actual, expected)
-		t.Fail()
-	}
-}
-
-// Tests all the various entries work (except temperature)
+// Tests all the various entries work (except temperature). Also tests concurrent use of database
 func TestStaticSQLEntries(t *testing.T) {
 	db := connectorFixture()
 	count := 5
@@ -155,8 +110,8 @@ func TestStaticSQLEntries(t *testing.T) {
 	// asynchronously make an entry for each type
 	var wg sync.WaitGroup
 	wg.Add(5 * count)
-	type function func() (sql.Result, error)
-	check := func(callable function) {
+	type addFunction func() (sql.Result, error)
+	checkAdd := func(callable addFunction) {
 		defer wg.Done()
 		_, err := callable()
 		if err != nil {
@@ -164,27 +119,46 @@ func TestStaticSQLEntries(t *testing.T) {
 		}
 	}
 	for i := 0; i < count; i++ {
-		go check(db.MakeRainEntry)
-		go check(db.MakeSoftResetEntry)
-		go check(db.MakeHardResetEntry)
-		go check(db.MakePauseEntry)
-		go check(db.MakeUnpauseEntry)
+		go checkAdd(db.MakeRainEntry)
+		go checkAdd(db.MakeSoftResetEntry)
+		go checkAdd(db.MakeHardResetEntry)
+		go checkAdd(db.MakePauseEntry)
+		go checkAdd(db.MakeUnpauseEntry)
 	}
 	// wait for entries to finish
 	wg.Wait()
 
 	// verify counts
-	rain := db.GetRainEntries()
-	soft := db.GetSoftResetEntries()
-	hard := db.GetHardResetEntries()
-	pause := db.GetPauseEntries()
-	unpause := db.GetUnpauseEntires()
-
-	for idx, val := range []int{rain, soft, hard, pause, unpause} {
-		if val != count {
-			logrus.Error(idx)
+	wg.Add(5)
+	type getFunction func() int
+	checkGet := func(callable getFunction) {
+		defer wg.Done()
+		tally := callable()
+		if tally != count {
 			t.Fail()
 		}
+	}
+	go checkGet(db.GetRainEntries)
+	go checkGet(db.GetSoftResetEntries)
+	go checkGet(db.GetHardResetEntries)
+	go checkGet(db.GetPauseEntries)
+	go checkGet(db.GetUnpauseEntries)
+	wg.Wait()
+}
 
+// tests that we can enter temperature
+func TestTemperatureEntries(t *testing.T) {
+	db := connectorFixture()
+	vals := []int{-100, -25, -15, -1, 0, 1, 2, 20, 24, 100}
+	for _, expected := range vals {
+		_, err := db.MakeTemperatureEntry(expected)
+		if err != nil {
+			logrus.Error(err)
+			t.Error(err)
+		}
+		if actual := db.GetLastTemperatureEntry(); expected != actual {
+			logrus.Errorf("expected=%d, actual=%d", expected, actual)
+			t.Fail()
+		}
 	}
 }
