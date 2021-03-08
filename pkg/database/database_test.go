@@ -72,8 +72,6 @@ func TestRainEntry(t *testing.T) {
 	if testing.Short() {
 		logrus.Info("skipping property tests")
 		return
-	} else {
-		logrus.Info("doing full property test")
 	}
 
 	db := connectorFixture()

@@ -27,6 +27,11 @@ tasks:
     cmds:
       - go test -short ./... | grep -v "no test files"
 
+  cover:
+    desc: Run tests with coverage report
+    cmds:
+      - go test -cover ./...
+
   run:
     desc: run the binary
     cmds:

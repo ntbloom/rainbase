@@ -22,7 +22,6 @@ type DBConnector struct {
 	file     *os.File        // pointer to actual file
 	fullPath string          // full POSIX path of sqlite file
 	ctx      context.Context // background context
-	//sync.Mutex                 // access the database serially
 }
 
 // NewDBConnector makes a new databaseconnector struct
@@ -161,7 +160,6 @@ func (db *DBConnector) tally(tag int) int {
 func (db *DBConnector) getLastRecord(tag int) int {
 	cmd := fmt.Sprintf(`SELECT value FROM log WHERE tag = %d ORDER BY id DESC LIMIT 1;`, tag)
 	return db.getSingleInt(cmd)
-
 }
 
 // getSingleInt returns the first result of any SQL query that gives at least one integer result
