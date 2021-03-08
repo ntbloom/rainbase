@@ -151,7 +151,6 @@ func TestStaticSQLEntries(t *testing.T) {
 	db := connectorFixture()
 
 	count := 5
-	timeout := 30
 
 	var rain, soft, hard, pause, unpause int
 	var err error
@@ -160,67 +159,40 @@ func TestStaticSQLEntries(t *testing.T) {
 			t.Error(err)
 		}
 	}
-	total := make(chan int)
-	tally := 0
-	var mu sync.Mutex
+	var wg sync.WaitGroup
 
-	// TODO: Refactor with cleaner function and waitgroups
+	wg.Add(5 * count)
 	for i := 0; i < count; i++ {
 		go func() {
 			_, err = db.MakeRainEntry()
 			check(err)
-			mu.Lock()
-			tally++
-			total <- tally
-			mu.Unlock()
+			wg.Done()
 		}()
 		go func() {
 			_, err = db.MakeSoftResetEntry()
 			check(err)
-			mu.Lock()
-			tally++
-			total <- tally
-			mu.Unlock()
+			wg.Done()
 		}()
 		go func() {
 			_, err = db.MakeHardResetEntry()
 			check(err)
-			mu.Lock()
-			tally++
-			total <- tally
-			mu.Unlock()
+			wg.Done()
 		}()
 		go func() {
 			_, err = db.MakePauseEntry()
 			check(err)
-			mu.Lock()
-			tally++
-			total <- tally
-			mu.Unlock()
+			wg.Done()
 		}()
 		go func() {
 			_, err = db.MakeUnpauseEntry()
 			check(err)
-			mu.Lock()
-			tally++
-			total <- tally
-			mu.Unlock()
+			wg.Done()
 		}()
 	}
 	// wait for entries to finish
-	done := false
-	for i := timeout; i != 0; i-- {
-		finished := <-total
-		logrus.Info(finished)
-		if finished == count*5 {
-			done = true
-			break
-		}
-		time.Sleep(1 * time.Second)
-	}
-	if !done {
-		t.Fail()
-	}
+	logrus.Info("waiting for finish")
+	wg.Wait()
+	logrus.Info("waitgroup finished")
 
 	rain = db.GetRainEntries()
 	soft = db.GetSoftResetEntries()
@@ -228,7 +200,11 @@ func TestStaticSQLEntries(t *testing.T) {
 	pause = db.GetPauseEntries()
 	unpause = db.GetUnpauseEntires()
 
-	if rain != count || soft != count || hard != count || pause != count || unpause != count {
-		t.Fail()
+	for idx, val := range []int{rain, soft, hard, pause, unpause} {
+		if val != count {
+			logrus.Error(idx)
+			t.Fail()
+		}
+
 	}
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/ntbloom/rainbase/pkg/tlv"
@@ -23,7 +22,7 @@ type DBConnector struct {
 	file       *os.File        // pointer to actual file
 	fullPath   string          // full POSIX path of sqlite file
 	ctx        context.Context // background context
-	sync.Mutex                 // access the database serially
+	//sync.Mutex                 // access the database serially
 }
 
 // NewDBConnector makes a new databaseconnector struct
