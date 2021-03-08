@@ -1,6 +1,7 @@
 package database_test
 
 import (
+	"database/sql"
 	"os"
 	"sync"
 	"testing"
@@ -149,56 +150,35 @@ func TestConcurrentEntries(t *testing.T) {
 // Tests all the various entries work (except temperature)
 func TestStaticSQLEntries(t *testing.T) {
 	db := connectorFixture()
-
 	count := 5
 
-	var rain, soft, hard, pause, unpause int
-	var err error
-	check := func(e error) {
-		if e != nil {
+	// asynchronously make an entry for each type
+	var wg sync.WaitGroup
+	wg.Add(5 * count)
+	type function func() (sql.Result, error)
+	check := func(callable function) {
+		defer wg.Done()
+		_, err := callable()
+		if err != nil {
 			t.Error(err)
 		}
 	}
-	var wg sync.WaitGroup
-
-	wg.Add(5 * count)
 	for i := 0; i < count; i++ {
-		go func() {
-			_, err = db.MakeRainEntry()
-			check(err)
-			wg.Done()
-		}()
-		go func() {
-			_, err = db.MakeSoftResetEntry()
-			check(err)
-			wg.Done()
-		}()
-		go func() {
-			_, err = db.MakeHardResetEntry()
-			check(err)
-			wg.Done()
-		}()
-		go func() {
-			_, err = db.MakePauseEntry()
-			check(err)
-			wg.Done()
-		}()
-		go func() {
-			_, err = db.MakeUnpauseEntry()
-			check(err)
-			wg.Done()
-		}()
+		go check(db.MakeRainEntry)
+		go check(db.MakeSoftResetEntry)
+		go check(db.MakeHardResetEntry)
+		go check(db.MakePauseEntry)
+		go check(db.MakeUnpauseEntry)
 	}
 	// wait for entries to finish
-	logrus.Info("waiting for finish")
 	wg.Wait()
-	logrus.Info("waitgroup finished")
 
-	rain = db.GetRainEntries()
-	soft = db.GetSoftResetEntries()
-	hard = db.GetHardResetEntries()
-	pause = db.GetPauseEntries()
-	unpause = db.GetUnpauseEntires()
+	// verify counts
+	rain := db.GetRainEntries()
+	soft := db.GetSoftResetEntries()
+	hard := db.GetHardResetEntries()
+	pause := db.GetPauseEntries()
+	unpause := db.GetUnpauseEntires()
 
 	for idx, val := range []int{rain, soft, hard, pause, unpause} {
 		if val != count {
