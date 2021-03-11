@@ -53,58 +53,76 @@ func NewDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 }
 
 /* SQL LOG ENTRIES */
-
 // MakeRainEntry addRecord a rain event
-func (db *DBConnector) MakeRainEntry() (sql.Result, error) {
-	return db.addRecord(tlv.Rain, tlv.RainValue)
-}
-
-func (db *DBConnector) GetRainEntries() int {
-	return db.tally(tlv.Rain)
+func (db *DBConnector) MakeRainEntry() {
+	_, err := db.addRecord(tlv.Rain, tlv.RainValue)
+	if err != nil {
+		logrus.Error(err)
+	}
 }
 
 // MakeSoftResetEntry addRecord a soft reset event
-func (db *DBConnector) MakeSoftResetEntry() (sql.Result, error) {
-	return db.addRecord(tlv.SoftReset, tlv.SoftResetValue)
+func (db *DBConnector) MakeSoftResetEntry() {
+	_, err := db.addRecord(tlv.SoftReset, tlv.SoftResetValue)
+	if err != nil {
+		logrus.Error(err)
+	}
+}
+
+// MakeHardResetEntry addRecord a hard reset event
+func (db *DBConnector) MakeHardResetEntry() {
+	_, err := db.addRecord(tlv.HardReset, tlv.HardResetValue)
+	if err != nil {
+		logrus.Error(err)
+	}
+}
+
+// MakePauseEntry addRecord a pause event
+func (db *DBConnector) MakePauseEntry() {
+	_, err := db.addRecord(tlv.Pause, tlv.Unpause)
+	if err != nil {
+		logrus.Error(err)
+	}
+}
+
+// MakeUnpauseEntry addRecord an unpause event
+func (db *DBConnector) MakeUnpauseEntry() {
+	_, err := db.addRecord(tlv.Unpause, tlv.UnpauseValue)
+	if err != nil {
+		logrus.Error(err)
+	}
+}
+
+// MakeTemperatureEntry addRecord a temperature measurement
+func (db *DBConnector) MakeTemperatureEntry(tempC int) {
+	_, err := db.addRecord(tlv.Temperature, tempC)
+	if err != nil {
+		logrus.Error(err)
+	}
+}
+
+/* GETTERS, MOSTLY FOR TESTING */
+func (db *DBConnector) GetRainEntries() int {
+	return db.tally(tlv.Rain)
 }
 
 func (db *DBConnector) GetSoftResetEntries() int {
 	return db.tally(tlv.SoftReset)
 }
 
-// MakeHardResetEntry addRecord a hard reset event
-func (db *DBConnector) MakeHardResetEntry() (sql.Result, error) {
-	return db.addRecord(tlv.HardReset, tlv.HardResetValue)
-}
-
 func (db *DBConnector) GetHardResetEntries() int {
 	return db.tally(tlv.HardReset)
-}
-
-// MakePauseEntry addRecord a pause event
-func (db *DBConnector) MakePauseEntry() (sql.Result, error) {
-	return db.addRecord(tlv.Pause, tlv.Unpause)
 }
 
 func (db *DBConnector) GetPauseEntries() int {
 	return db.tally(tlv.Pause)
 }
 
-// MakeUnpauseEntry addRecord an unpause event
-func (db *DBConnector) MakeUnpauseEntry() (sql.Result, error) {
-	return db.addRecord(tlv.Unpause, tlv.UnpauseValue)
-}
-
 func (db *DBConnector) GetUnpauseEntries() int {
 	return db.tally(tlv.Unpause)
 }
 
-// MakeTemperatureEntry addRecord a temperature measurement
-func (db *DBConnector) MakeTemperatureEntry(tempC int) (sql.Result, error) {
-	return db.addRecord(tlv.Temperature, tempC)
-}
-
-//
+// GetLastTemperatureEntry returns last temp reading, sorted by primary key
 func (db *DBConnector) GetLastTemperatureEntry() int {
 	return db.getLastRecord(tlv.Temperature)
 }

@@ -111,7 +111,6 @@ func (m *Messenger) NewMessage(packet *tlv.TLV) (*Message, error) {
 	now := time.Now()
 	var event Payload
 	var topic string
-	var sqlErr error
 
 	switch packet.Tag {
 	case tlv.Rain:
@@ -121,7 +120,7 @@ func (m *Messenger) NewMessage(packet *tlv.TLV) (*Message, error) {
 			viper.GetString(configkey.SensorRainMetric),
 			now,
 		}
-		_, sqlErr = m.db.MakeRainEntry()
+		go m.db.MakeRainEntry()
 	case tlv.Temperature:
 		topic = paho.TemperatureTopic
 		tempC := packet.Value
@@ -130,7 +129,7 @@ func (m *Messenger) NewMessage(packet *tlv.TLV) (*Message, error) {
 			tempC,
 			now,
 		}
-		_, sqlErr = m.db.MakeTemperatureEntry(tempC)
+		go m.db.MakeTemperatureEntry(tempC)
 	case tlv.SoftReset:
 		topic = paho.SensorEvent
 		event = &SensorEvent{
@@ -138,7 +137,7 @@ func (m *Messenger) NewMessage(packet *tlv.TLV) (*Message, error) {
 			SensorSoftReset,
 			now,
 		}
-		_, sqlErr = m.db.MakeSoftResetEntry()
+		go m.db.MakeSoftResetEntry()
 	case tlv.HardReset:
 		topic = paho.SensorEvent
 		event = &SensorEvent{
@@ -146,7 +145,7 @@ func (m *Messenger) NewMessage(packet *tlv.TLV) (*Message, error) {
 			SensorHardReset,
 			now,
 		}
-		_, sqlErr = m.db.MakeHardResetEntry()
+		go m.db.MakeHardResetEntry()
 	case tlv.Pause:
 		topic = paho.SensorEvent
 		event = &SensorEvent{
@@ -154,7 +153,7 @@ func (m *Messenger) NewMessage(packet *tlv.TLV) (*Message, error) {
 			SensorPause,
 			now,
 		}
-		_, sqlErr = m.db.MakePauseEntry()
+		go m.db.MakePauseEntry()
 	case tlv.Unpause:
 		topic = paho.SensorEvent
 		event = &SensorEvent{
@@ -162,13 +161,10 @@ func (m *Messenger) NewMessage(packet *tlv.TLV) (*Message, error) {
 			SensorUnpause,
 			now,
 		}
-		_, sqlErr = m.db.MakeUnpauseEntry()
+		go m.db.MakeUnpauseEntry()
 	default:
 		logrus.Errorf("unsupported tag %d", packet.Tag)
 		return nil, nil
-	}
-	if sqlErr != nil {
-		logrus.Errorf("unable to log event: %s", sqlErr)
 	}
 
 	payload, err := event.Process()
