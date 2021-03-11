@@ -1,7 +1,6 @@
 package database_test
 
 import (
-	"database/sql"
 	"os"
 	"sync"
 	"testing"
@@ -79,10 +78,7 @@ func TestRainEntry(t *testing.T) {
 	test := func(reps uint8) bool {
 		count := int(reps)
 		for i := 0; i < count; i++ {
-			if res, err := db.MakeRainEntry(); err != nil || res == nil {
-				logrus.Error(err)
-				return false
-			}
+			db.MakeRainEntry()
 		}
 		var val int
 		if val = db.GetRainEntries(); val == -1 {
@@ -108,13 +104,10 @@ func TestStaticSQLEntries(t *testing.T) {
 	// asynchronously make an entry for each type
 	var wg sync.WaitGroup
 	wg.Add(5 * count)
-	type addFunction func() (sql.Result, error)
+	type addFunction func()
 	checkAdd := func(callable addFunction) {
 		defer wg.Done()
-		_, err := callable()
-		if err != nil {
-			t.Error(err)
-		}
+		callable()
 	}
 	for i := 0; i < count; i++ {
 		go checkAdd(db.MakeRainEntry)
@@ -149,11 +142,7 @@ func TestTemperatureEntries(t *testing.T) {
 	db := connectorFixture()
 	vals := []int{-100, -25, -15, -1, 0, 1, 2, 20, 24, 100}
 	for _, expected := range vals {
-		_, err := db.MakeTemperatureEntry(expected)
-		if err != nil {
-			logrus.Error(err)
-			t.Error(err)
-		}
+		db.MakeTemperatureEntry(expected)
 		if actual := db.GetLastTemperatureEntry(); expected != actual {
 			logrus.Errorf("expected=%d, actual=%d", expected, actual)
 			t.Fail()

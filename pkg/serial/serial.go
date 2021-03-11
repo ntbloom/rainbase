@@ -84,7 +84,7 @@ func (serial *Serial) GetTLV() {
 		if err != nil {
 			logrus.Errorf("unexpected TLV packet: %s", err)
 		}
-		msg, err := messenger.NewMessage(tlvPacket)
+		msg, err := serial.Messenger.NewMessage(tlvPacket)
 		if err != nil {
 			logrus.Errorf("bad tlv packet, ignoring: %s", err)
 			continue
