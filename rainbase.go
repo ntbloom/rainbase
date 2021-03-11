@@ -3,6 +3,8 @@ package main
 import (
 	"time"
 
+	"github.com/ntbloom/rainbase/pkg/database"
+
 	"github.com/ntbloom/rainbase/pkg/config"
 	"github.com/ntbloom/rainbase/pkg/config/configkey"
 	"github.com/ntbloom/rainbase/pkg/messenger"
@@ -30,7 +32,8 @@ func listen(duration int) {
 	if err != nil {
 		panic(err)
 	}
-	msgr := messenger.NewMessenger(client)
+	db, err := database.NewDBConnector(viper.GetString(configkey.DatabaseLocalDevFile), true)
+	msgr := messenger.NewMessenger(client, db)
 	conn, err := getSerialConnection(msgr)
 	if err != nil {
 		panic(err)

@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/ntbloom/rainbase/pkg/database"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/ntbloom/rainbase/pkg/config/configkey"
 	"github.com/ntbloom/rainbase/pkg/paho"
@@ -15,18 +17,19 @@ import (
 // Messenger receives Message from serial port, publishes to mqtt and stores locally
 type Messenger struct {
 	client mqtt.Client
+	db     *database.DBConnector
 	State  chan int
 	Data   chan *Message
 }
 
 // NewMessenger get a new messenger
-func NewMessenger(client mqtt.Client) *Messenger {
+func NewMessenger(client mqtt.Client, db *database.DBConnector) *Messenger {
 	state := make(chan int)
 	data := make(chan *Message)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		logrus.Errorf("unable to connect to MQTT: %s", token.Error())
 	}
-	return &Messenger{client, state, data}
+	return &Messenger{client, db, state, data}
 }
 
 // Wait for packet to publish or to receive signal interrupt
