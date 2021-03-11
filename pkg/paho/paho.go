@@ -26,6 +26,7 @@ type MqttConfig struct {
 
 // GetConfigFromViper get paho configuration details from viper directly
 func GetConfigFromViper() *MqttConfig {
+	// look for certs locally first
 	return &MqttConfig{
 		scheme:            viper.GetString(configkey.MQTTScheme),
 		broker:            viper.GetString(configkey.MQTTBrokerIP),

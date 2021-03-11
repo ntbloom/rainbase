@@ -1,10 +1,13 @@
 *.swp
 .idea/
+*.db
 secrets.yml
 
 # paho certificates
 *.crt
 *.key
 
+
 # binaries
 rainbase
+

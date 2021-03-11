@@ -109,81 +109,61 @@ type Message struct {
 // NewMessage makes a new message from a tlv packet mqtt topic
 func NewMessage(packet *tlv.TLV) (*Message, error) {
 	now := time.Now()
-	var payload []byte
+	var event Payload
 	var topic string
-	var err error
 
 	switch packet.Tag {
 	case tlv.Rain:
-		rain := RainEvent{
-			paho.RainTopic,
+		topic = paho.RainTopic
+		event= &RainEvent{
+			topic,
 			viper.GetString(configkey.SensorRainMetric),
 			now,
 		}
-		payload, err = rain.Process()
-		topic = rain.Topic
-		if err != nil {
-			return nil, err
-		}
 	case tlv.Temperature:
-		temp := TemperatureEvent{
-			paho.TemperatureTopic,
+		topic = paho.TemperatureTopic
+		event =&TemperatureEvent{
+			topic,
 			packet.Value,
 			now,
 		}
-		payload, err = temp.Process()
-		topic = temp.Topic
-		if err != nil {
-			return nil, err
-		}
 	case tlv.SoftReset:
-		soft := SensorEvent{
-			paho.SensorEvent,
+		topic = paho.SensorEvent
+		event = &SensorEvent{
+			topic,
 			SensorSoftReset,
 			now,
 		}
-		payload, err = soft.Process()
-		topic = soft.Topic
-		if err != nil {
-			return nil, err
-		}
 	case tlv.HardReset:
-		hard := SensorEvent{
-			paho.SensorEvent,
+		topic = paho.SensorEvent
+		event = &SensorEvent{
+			topic,
 			SensorHardReset,
 			now,
 		}
-		payload, err = hard.Process()
-		topic = hard.Topic
-		if err != nil {
-			return nil, err
-		}
 	case tlv.Pause:
-		pause := SensorEvent{
-			paho.SensorEvent,
+		topic  = paho.SensorEvent
+		event = &SensorEvent{
+			topic,
 			SensorPause,
 			now,
 		}
-		payload, err = pause.Process()
-		topic = pause.Topic
-		if err != nil {
-			return nil, err
-		}
 	case tlv.Unpause:
-		unpause := SensorEvent{
-			paho.SensorEvent,
+		topic = paho.SensorEvent
+		event = &SensorEvent{
+			topic,
 			SensorUnpause,
 			now,
-		}
-		payload, err = unpause.Process()
-		topic = unpause.Topic
-		if err != nil {
-			return nil, err
 		}
 	default:
 		logrus.Errorf("unsupported tag %d", packet.Tag)
 		return nil, nil
 	}
+	payload, err:= event.Process()
+	if err != nil {
+		return nil, err
+	}
+
 	msg := Message{
 		topic:    topic,
 		retained: false,
