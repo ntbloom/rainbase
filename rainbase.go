@@ -33,6 +33,9 @@ func listen(duration int) {
 		panic(err)
 	}
 	db, err := database.NewDBConnector(viper.GetString(configkey.DatabaseLocalDevFile), true)
+	if err != nil {
+		panic(err)
+	}
 	msgr := messenger.NewMessenger(client, db)
 	conn, err := getSerialConnection(msgr)
 	if err != nil {

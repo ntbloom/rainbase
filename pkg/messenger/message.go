@@ -106,7 +106,7 @@ type Message struct {
 	payload  []byte
 }
 
-// NewMessage makes a new message from a tlv packet mqtt topic
+// NewMessage makes a new message from a tlv packet mqtt topic and logs the entry to the database in the background
 func (m *Messenger) NewMessage(packet *tlv.TLV) (*Message, error) {
 	now := time.Now()
 	var event Payload
