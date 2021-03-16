@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/ntbloom/rainbase/pkg/database"
@@ -49,9 +50,15 @@ func listen(duration int) {
 			time.Sleep(time.Second)
 			logrus.Tracef("sleep #%d", i+1)
 		}
-		conn.State <- configkey.SerialClosed
-		msgr.State <- configkey.SerialClosed
 	}
+	if duration == -1 {
+		for {
+			_, _ = fmt.Scanln()
+			break
+		}
+	}
+	conn.State <- configkey.SerialClosed
+	msgr.State <- configkey.SerialClosed
 	logrus.Info("reaching end of listener, program about to end")
 }
 
@@ -59,6 +66,6 @@ func main() {
 	config.Configure()
 
 	// run the main listening loop
-	duration := 20
+	duration := -1
 	listen(duration)
 }
