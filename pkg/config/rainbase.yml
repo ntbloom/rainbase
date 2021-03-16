@@ -18,7 +18,7 @@ mqtt:
   connection:
     timeout: 5s
     quiescence: 1000  # in milliseconds
-  qos: 0
+  qos: 1
 
 sensor:
   rain:
