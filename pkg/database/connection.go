@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 
+	_ "github.com/jackc/pgx/v4" // driver for postgresql
 	"github.com/sirupsen/logrus"
 	_ "modernc.org/sqlite" // driver for sqlite
 )
@@ -25,7 +26,7 @@ func (db *DBConnector) newConnection() (*connection, error) {
 
 	switch db.driver {
 	case sqlite:
-		database, err = sql.Open("sqlite", db.fullPath)
+		database, err = sql.Open("sqlite", db.dbName)
 		if err != nil {
 			logrus.Error("unable to open database")
 			return nil, err
@@ -37,6 +38,8 @@ func (db *DBConnector) newConnection() (*connection, error) {
 			logrus.Error("unable to get a connection struct")
 			return nil, err
 		}
+	case postgres:
+		panic("unsupported")
 	default:
 		panic("unsupported")
 	}

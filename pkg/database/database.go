@@ -10,13 +10,12 @@ import (
 )
 
 const sqlite = "sqlite"
-
-//const postgres = "postgresql"
+const postgres = "postgresql"
 
 type DBConnector struct {
-	fullPath string          // full POSIX path of sqlite file
-	driver   string          // change the type of database connection
-	ctx      context.Context // background context
+	dbName string          // full POSIX path of sqlite file or name of the database in Postgresql
+	driver string          // change the type of database connection
+	ctx    context.Context // background context
 }
 
 // NewSqliteDBConnector makes a new connector struct for sqlite
@@ -34,9 +33,9 @@ func NewSqliteDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 
 	// make a DBConnector object and make the schema if necessary
 	db := DBConnector{
-		fullPath: fullPath,
-		driver:   sqlite,
-		ctx:      context.Background(),
+		dbName: fullPath,
+		driver: sqlite,
+		ctx:    context.Background(),
 	}
 	if clobber {
 		_, err = db.makeSchema()
