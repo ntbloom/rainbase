@@ -23,11 +23,11 @@ func getConfig() {
 	config.Configure()
 }
 
-// connectorFixture makes a reusable DBConnector object
-func connectorFixture() *database.DBConnector {
+// sqliteConnectionFixture makes a reusable DBConnector object
+func sqliteConnectionFixture() *database.DBConnector {
 	getConfig()
 	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
-	db, _ := database.NewDBConnector(sqliteFile, true)
+	db, _ := database.NewSqliteDBConnector(sqliteFile, true)
 	return db
 }
 
@@ -43,7 +43,7 @@ func TestDatabasePrep(t *testing.T) {
 
 	// create and destroy 5 times
 	for i := 0; i < 5; i++ {
-		db, err := database.NewDBConnector(sqliteFile, true)
+		db, err := database.NewSqliteDBConnector(sqliteFile, true)
 		if err != nil || db == nil {
 			logrus.Error("database not created")
 			t.Error(err)
@@ -58,7 +58,7 @@ func TestDatabasePrep(t *testing.T) {
 
 // make sure foreign key contraints are enforced
 func TestForeignKeysEnforced(t *testing.T) {
-	db := connectorFixture()
+	db := sqliteConnectionFixture()
 	if foreignKeys := db.ForeignKeysAreImplemented(); !foreignKeys {
 		logrus.Error("sqlite is not enforcing foreign_key constraints")
 		t.Fail()
@@ -73,7 +73,7 @@ func TestRainEntry(t *testing.T) {
 		return
 	}
 
-	db := connectorFixture()
+	db := sqliteConnectionFixture()
 	var total int
 	test := func(reps uint8) bool {
 		count := int(reps)
@@ -98,7 +98,7 @@ func TestRainEntry(t *testing.T) {
 
 // Tests all the various entries work (except temperature). Also tests concurrent use of database
 func TestStaticSQLEntries(t *testing.T) {
-	db := connectorFixture()
+	db := sqliteConnectionFixture()
 	count := 5
 
 	// asynchronously make an entry for each type
@@ -139,7 +139,7 @@ func TestStaticSQLEntries(t *testing.T) {
 
 // tests that we can enter temperature
 func TestTemperatureEntries(t *testing.T) {
-	db := connectorFixture()
+	db := sqliteConnectionFixture()
 	vals := []int{-100, -25, -15, -1, 0, 1, 2, 20, 24, 100}
 	for _, expected := range vals {
 		db.MakeTemperatureEntry(expected)

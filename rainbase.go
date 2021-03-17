@@ -33,7 +33,7 @@ func listen(duration int) {
 	if err != nil {
 		panic(err)
 	}
-	db, err := database.NewDBConnector(viper.GetString(configkey.DatabaseLocalDevFile), true)
+	db, err := database.NewSqliteDBConnector(viper.GetString(configkey.DatabaseLocalDevFile), true)
 	if err != nil {
 		panic(err)
 	}

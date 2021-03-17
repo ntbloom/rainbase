@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/sirupsen/logrus"
+	_ "modernc.org/sqlite" // driver for sqlite
 )
 
 /* Wrap queries in methods so we don't expose the actual databse to the rest of the application */
@@ -19,20 +20,25 @@ func (db *DBConnector) newConnection() (*connection, error) {
 	var (
 		database *sql.DB
 		conn     *sql.Conn
+		err      error
 	)
 
-	// get a DB struct
-	database, err := sql.Open("sqlite", db.fullPath)
-	if err != nil {
-		logrus.Error("unable to open database")
-		return nil, err
-	}
+	switch db.driver {
+	case sqlite:
+		database, err = sql.Open("sqlite", db.fullPath)
+		if err != nil {
+			logrus.Error("unable to open database")
+			return nil, err
+		}
 
-	// make a Conn
-	conn, err = database.Conn(db.ctx)
-	if err != nil {
-		logrus.Error("unable to get a connection struct")
-		return nil, err
+		// make a Conn
+		conn, err = database.Conn(db.ctx)
+		if err != nil {
+			logrus.Error("unable to get a connection struct")
+			return nil, err
+		}
+	default:
+		panic("unsupported")
 	}
 	return &connection{database, conn}, nil
 }

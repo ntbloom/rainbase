@@ -12,20 +12,20 @@ import (
 	"github.com/ntbloom/rainbase/pkg/tlv"
 
 	"github.com/sirupsen/logrus"
-
-	_ "modernc.org/sqlite" // driver for sqlite
 )
 
 const foreignKey = `PRAGMA foreign_keys = ON;`
+const sqlite = "sqlite"
 
 type DBConnector struct {
 	file     *os.File        // pointer to actual file
 	fullPath string          // full POSIX path of sqlite file
+	driver   string          // change the type of database connection
 	ctx      context.Context // background context
 }
 
-// NewDBConnector makes a new databaseconnector struct
-func NewDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
+// NewSqliteDBConnector makes a new connector struct for sqlite
+func NewSqliteDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 	logrus.Debug("making new DBConnector")
 	if clobber {
 		_ = os.Remove(fullPath)
@@ -41,6 +41,7 @@ func NewDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 	db := DBConnector{
 		file:     file,
 		fullPath: fullPath,
+		driver:   sqlite,
 		ctx:      context.Background(),
 	}
 	if clobber {
