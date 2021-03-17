@@ -1,6 +1,5 @@
 package database
 
-// Prep a database.  This is essentially a test fixture but also to be called at the start of a new deployment
 import (
 	"context"
 	"os"
@@ -12,6 +11,8 @@ import (
 
 const sqlite = "sqlite"
 
+//const postgres = "postgresql"
+
 type DBConnector struct {
 	file     *os.File        // pointer to actual file
 	fullPath string          // full POSIX path of sqlite file
@@ -21,7 +22,7 @@ type DBConnector struct {
 
 // NewSqliteDBConnector makes a new connector struct for sqlite
 func NewSqliteDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
-	logrus.Debug("making new DBConnector")
+	logrus.Debug("making new DBConnector struct for Sqlite")
 	if clobber {
 		_ = os.Remove(fullPath)
 	}
