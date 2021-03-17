@@ -14,7 +14,6 @@ const sqlite = "sqlite"
 //const postgres = "postgresql"
 
 type DBConnector struct {
-	file     *os.File        // pointer to actual file
 	fullPath string          // full POSIX path of sqlite file
 	driver   string          // change the type of database connection
 	ctx      context.Context // background context
@@ -28,14 +27,13 @@ func NewSqliteDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 	}
 
 	// connect to the file and open it
-	file, err := os.Create(fullPath)
+	_, err := os.Create(fullPath)
 	if err != nil {
 		return nil, err
 	}
 
 	// make a DBConnector object and make the schema if necessary
 	db := DBConnector{
-		file:     file,
 		fullPath: fullPath,
 		driver:   sqlite,
 		ctx:      context.Background(),
