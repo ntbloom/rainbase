@@ -1,6 +1,6 @@
 package database
 
-// SQLite schema for logging data in rainbase
+// Schema for logging data in rainbase, should work for both postgresql and sqlite
 
 const (
 	//nolint
