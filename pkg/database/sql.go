@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -22,12 +23,12 @@ func (db *DBConnector) enterData(cmd string) (sql.Result, error) {
 	if db.driver == sqlite {
 		cmd = strings.Join([]string{sqliteForeignKeyPragma, cmd}, " ")
 	}
-	if c, err = db.newConnection(); err != nil {
+	if c, err = db.connector.connect(); err != nil {
 		return nil, err
 	}
-	defer c.disconnect()
+	defer db.disconnect(c)
 
-	return c.conn.ExecContext(db.ctx, cmd)
+	return c.conn.ExecContext(context.Background(), cmd)
 }
 
 // makeSchema puts the schema in the sqlite file
@@ -63,10 +64,10 @@ func (db *DBConnector) getSingleInt(query string) int {
 	var rows *sql.Rows
 	var err error
 
-	c, _ := db.newConnection() // don't handle the error, just return -1
-	defer c.disconnect()
+	c, _ := db.connector.connect() // don't handle the error, just return -1
+	defer db.disconnect(c)
 
-	if rows, err = c.conn.QueryContext(db.ctx, query); err != nil {
+	if rows, err = c.conn.QueryContext(context.Background(), query); err != nil {
 		return -1
 	}
 	closed := func() {

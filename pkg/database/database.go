@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"os"
 
 	"github.com/ntbloom/rainbase/pkg/tlv"
@@ -13,12 +12,12 @@ const sqlite = "sqlite"
 const postgres = "postgresql"
 
 type DBConnector struct {
-	dbName string          // full POSIX path of sqlite file or name of the database in Postgresql
-	driver string          // change the type of database connection
-	ctx    context.Context // background context
+	dbName    string    // full POSIX path of sqlite file or name of the database in Postgresql
+	driver    string    // change the type of database connection
+	connector Connector // connector interface for postgresql, sqlite, etc
 }
 
-// NewSqliteDBConnector makes a new connector struct for sqlite
+// NewSqliteDBConnector makes a new Connector struct for sqlite
 func NewSqliteDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 	logrus.Debug("making new DBConnector struct for Sqlite")
 	if clobber {
@@ -33,9 +32,9 @@ func NewSqliteDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 
 	// make a DBConnector object and make the schema if necessary
 	db := DBConnector{
-		dbName: fullPath,
-		driver: sqlite,
-		ctx:    context.Background(),
+		dbName:    fullPath,
+		driver:    sqlite,
+		connector: &SqliteConnector{fullPath},
 	}
 	if clobber {
 		_, err = db.makeSchema()
