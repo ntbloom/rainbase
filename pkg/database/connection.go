@@ -9,13 +9,16 @@ import (
 	_ "modernc.org/sqlite" // driver for sqlite
 )
 
-// Connector interface that abstracts the type of database implemented, in this case postgresql vs. sqlite
-type Connector interface {
+// connection
+// Abstract away the type of database used (postgresql, sqlite, etc)
+
+// connector interface that abstracts the type of database implemented, in this case postgresql vs. sqlite
+type connector interface {
 	connect() (*connection, error)
 }
 
 // Sqlite struct, simple connector for sqlite files
-type SqliteConnector struct {
+type sqliteConnector struct {
 	dbFullPath string // full POSIX path of database file
 }
 
@@ -26,7 +29,7 @@ type connection struct {
 }
 
 // connect makes a connection with sqlite file
-func (s *SqliteConnector) connect() (*connection, error) {
+func (s *sqliteConnector) connect() (*connection, error) {
 	var (
 		database *sql.DB
 		conn     *sql.Conn

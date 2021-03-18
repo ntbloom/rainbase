@@ -9,15 +9,14 @@ import (
 )
 
 const sqlite = "sqlite"
-const postgres = "postgresql"
 
 type DBConnector struct {
 	dbName    string    // full POSIX path of sqlite file or name of the database in Postgresql
 	driver    string    // change the type of database connection
-	connector Connector // connector interface for postgresql, sqlite, etc
+	connector connector // connector interface for postgresql, sqlite, etc
 }
 
-// NewSqliteDBConnector makes a new Connector struct for sqlite
+// NewSqliteDBConnector makes a new connector struct for sqlite
 func NewSqliteDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 	logrus.Debug("making new DBConnector struct for Sqlite")
 	if clobber {
@@ -34,7 +33,7 @@ func NewSqliteDBConnector(fullPath string, clobber bool) (*DBConnector, error) {
 	db := DBConnector{
 		dbName:    fullPath,
 		driver:    sqlite,
-		connector: &SqliteConnector{fullPath},
+		connector: &sqliteConnector{fullPath},
 	}
 	if clobber {
 		_, err = db.makeSchema()
