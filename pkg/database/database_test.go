@@ -1,12 +1,10 @@
 package database_test
 
 import (
-	"os"
+	"github.com/sirupsen/logrus"
 	"sync"
 	"testing"
 	"testing/quick"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/viper"
 
@@ -117,29 +115,6 @@ func testTemperatureEntries(db *database.DBConnector, t *testing.T) {
 
 /* Starting with Sqlite, make sure the schema and file manipulation are enforced properly */
 
-// create and destroy sqlite file 5 times, get DBCOnnector struct
-func TestSqliteDataPrep(t *testing.T) {
-	getConfig()
-	sqliteFile := viper.GetString(configkey.DatabaseLocalDevFile)
-
-	// clean up when finished
-	defer func() { _ = os.Remove(sqliteFile) }()
-
-	// create and destroy 5 times
-	for i := 0; i < 5; i++ {
-		db, err := database.NewSqliteDBConnector(sqliteFile, true)
-		if err != nil || db == nil {
-			logrus.Error("database not created")
-			t.Error(err)
-		}
-		_, err = os.Stat(sqliteFile)
-		if err != nil {
-			logrus.Error("sqlite file doesn't exist")
-			t.Error(err)
-		}
-	}
-}
-
 func TestSqliteForeignKeysAreImplemented(t *testing.T) {
 	db := sqliteConnectionFixture()
 	if foreignKeys := db.ForeignKeysAreImplemented(); !foreignKeys {
@@ -161,4 +136,15 @@ func TestSqliteStaticSQLEntries(t *testing.T) {
 func TestSqliteTemperatureEntries(t *testing.T) {
 	db := sqliteConnectionFixture()
 	testTemperatureEntries(db, t)
+}
+
+/* Postgresql tests */
+
+func TestPostgresqlFixtures(t *testing.T) {
+	err := database.PostgresContainerUp()
+	defer database.PostgresContainerDown()
+	if err != nil {
+		logrus.Error(err)
+		t.Fail()
+	}
 }
