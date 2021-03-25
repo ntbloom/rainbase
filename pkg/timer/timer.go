@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type TimerAction interface {
+type Action interface {
 	DoAction() // run a parameterless function
 }
 
@@ -14,12 +14,12 @@ type TimerAction interface {
 type Timer struct {
 	start    time.Time     // when the timer starts
 	interval time.Duration // when to trigger something
-	action   TimerAction   // function to call when timer is up
+	action   Action        // function to call when timer is up
 	Kill     chan bool     // send bool to channel to finish
 }
 
 // NewTimer returns a pointer to a Timer struct
-func NewTimer(interval time.Duration, action TimerAction) *Timer {
+func NewTimer(interval time.Duration, action Action) *Timer {
 	finish := make(chan bool)
 	return &Timer{
 		start:    time.Now(),

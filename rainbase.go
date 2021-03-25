@@ -63,9 +63,26 @@ func listen(duration int) {
 }
 
 func main() {
+	// read config from the config file
 	config.Configure()
 
 	// run the main listening loop
 	duration := -1
 	listen(duration)
 }
+
+// what main will eventually become in production
+// func main() {
+
+// connect to paho
+
+// connect to the database
+
+// connect to serial port
+
+// get a Messenger
+
+// m.Listen()
+
+// listen for interrupt
+// }
