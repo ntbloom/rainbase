@@ -32,10 +32,13 @@ func NewTimer(interval time.Duration, action Action) *Timer {
 // Loop runs an infinite loop, triggering an action. stops when receives message on Finish channel
 func (t *Timer) Loop() {
 	for {
-		t.check()
+		if t.interval > 0 {
+			t.check()
+		}
 
 		select {
 		case <-t.Kill:
+			go t.action.DoAction()
 			return
 		default:
 			continue

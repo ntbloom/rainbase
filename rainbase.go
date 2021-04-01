@@ -51,13 +51,15 @@ func connectSerialPort(msgr *messenger.Messenger) *serial.Serial {
 	return conn
 }
 
-type kill struct{ channels []chan uint8 }
-
+// set up a way to kill the process, either through a timer or os.signal
 func stopLoop(channels []chan uint8) {
 	for _, channel := range channels {
 		channel <- configkey.SerialClosed
 	}
 }
+
+// struct for killing with timer
+type kill struct{ channels []chan uint8 }
 
 func (k *kill) DoAction() {
 	stopLoop(k.channels)
@@ -71,8 +73,7 @@ func startKillTimer(duration time.Duration, killChannels []chan uint8) *timer.Ti
 	return t
 }
 
-// run main loop for number of seconds or indefinitely
-// for debugging/testing purposes; not to be used for production
+// run main listening loop for number of seconds or indefinitely if duration is negative
 func listen(duration time.Duration) {
 	client := connectToMQTT()
 	db := connectToDatabase()
@@ -83,27 +84,21 @@ func listen(duration time.Duration) {
 	go msgr.Listen()
 	go conn.GetTLV()
 
+	// start a timer
 	killChannels := []chan uint8{conn.State, msgr.State}
+	t := startKillTimer(duration, killChannels)
+	go t.Loop()
 
-	// wait for timer to interrupt
-	if duration > 0 {
-		logrus.Infof("program running for %s duration", duration)
-		t := startKillTimer(duration, killChannels)
-		t.Loop()
-	}
-
-	// or else run indefinitely until the shell is interrupted
+	// kill process with sigint regardless of whether duration is negative
 	sigs := make(chan os.Signal)
-	done := make(chan bool)
-	signal.Notify(sigs, syscall.SIGINT)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
 		logrus.Infof("program received %s signal, exiting", sig)
 		stopLoop(killChannels)
-		done <- true
+		t.Kill <- true
 	}()
-	logrus.Info("program running indefinitely")
-	<-done
+	<-t.Kill
 }
 
 func main() {
@@ -111,6 +106,6 @@ func main() {
 	config.Configure()
 
 	// run the main listening loop
-	duration := time.Second * -1
+	duration := time.Second * 10
 	listen(duration)
 }
