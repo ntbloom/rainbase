@@ -33,7 +33,8 @@ func TestTimer(t *testing.T) {
 	fake.Unlock()
 	assert.Equal(t, 0, count)
 
-	time.Sleep(time.Second * 5)
+	// give a small buffer to account for slowness on race test
+	time.Sleep(time.Second*5 + (time.Millisecond * 20))
 	countTimer.Kill <- true
 
 	fake.Lock()

@@ -18,13 +18,13 @@ import (
 type Messenger struct {
 	client mqtt.Client
 	db     *database.DBConnector
-	State  chan int
+	State  chan uint8
 	Data   chan *Message
 }
 
 // NewMessenger get a new messenger
 func NewMessenger(client mqtt.Client, db *database.DBConnector) *Messenger {
-	state := make(chan int)
+	state := make(chan uint8)
 	data := make(chan *Message)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		logrus.Errorf("unable to connect to MQTT: %s", token.Error())
