@@ -15,13 +15,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// statusCounter a simple struct implementing Action interface
-type statusCounter struct{ state chan uint8 }
-
-func (s *statusCounter) DoAction() {
-	s.state <- configkey.SendStatusMessage
-}
-
 // Messenger receives Message from serial port, publishes to mqtt and stores locally
 type Messenger struct {
 	client mqtt.Client           // MQTT Client object
@@ -47,8 +40,7 @@ func (m *Messenger) Listen() {
 	// configure status messages
 	statusInterval := viper.GetDuration(configkey.MessengerStatusInterval)
 	if statusInterval > 0 {
-		sc := &statusCounter{m.State}
-		statusTimer := timer.NewTimer(statusInterval, sc)
+		statusTimer := timer.NewChannelUint8Timer(statusInterval, m.State, configkey.SendStatusMessage)
 		go statusTimer.Loop()
 	}
 
