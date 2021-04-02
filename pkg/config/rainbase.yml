@@ -34,3 +34,7 @@ database:
       file: /etc/rainbase/rainbase-gateway-prod.db
     dev:
       file: /tmp/rainbase.db
+
+messenger:
+  status:
+    interval: 3s

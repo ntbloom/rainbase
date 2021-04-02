@@ -106,6 +106,6 @@ func main() {
 	config.Configure()
 
 	// run the main listening loop
-	duration := time.Second * 10
+	duration := time.Second * -10
 	listen(duration)
 }

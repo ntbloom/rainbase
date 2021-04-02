@@ -6,20 +6,28 @@ import (
 	"time"
 
 	"github.com/ntbloom/rainbase/pkg/database"
+	"github.com/ntbloom/rainbase/pkg/paho"
+	"github.com/ntbloom/rainbase/pkg/timer"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/ntbloom/rainbase/pkg/config/configkey"
-	"github.com/ntbloom/rainbase/pkg/paho"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
+// statusCounter a simple struct implementing Action interface
+type statusCounter struct{ state chan uint8 }
+
+func (s *statusCounter) DoAction() {
+	s.state <- configkey.SendStatusMessage
+}
+
 // Messenger receives Message from serial port, publishes to mqtt and stores locally
 type Messenger struct {
-	client mqtt.Client
-	db     *database.DBConnector
-	State  chan uint8
-	Data   chan *Message
+	client mqtt.Client           // MQTT Client object
+	db     *database.DBConnector // Database connector
+	State  chan uint8            // What is the Messenger supposed to do?
+	Data   chan *Message         // Actual data packets
 }
 
 // NewMessenger get a new messenger
@@ -35,6 +43,14 @@ func NewMessenger(client mqtt.Client, db *database.DBConnector) *Messenger {
 // Wait for packet to publish or to receive signal interrupt
 func (m *Messenger) Listen() {
 	defer m.client.Disconnect(viper.GetUint(configkey.MQTTQuiescence))
+
+	// configure status messages
+	statusInterval := viper.GetDuration(configkey.MessengerStatusInterval)
+	if statusInterval > 0 {
+		sc := &statusCounter{m.State}
+		statusTimer := timer.NewTimer(statusInterval, sc)
+		go statusTimer.Loop()
+	}
 
 	// loop until signal
 	for {
@@ -78,7 +94,7 @@ func gatewayStatusMessage() (*Message, error) {
 	gs := GatewayStatus{
 		Topic:     paho.GatewayStatus,
 		OK:        true,
-		Timestamp: time.Time{},
+		Timestamp: time.Now(),
 	}
 	msg, err := gs.Process()
 	if err != nil {
@@ -106,7 +122,7 @@ func sensorStatusMessage() (*Message, error) {
 	ss := SensorStatus{
 		Topic:     paho.SensorStatus,
 		OK:        up,
-		Timestamp: time.Time{},
+		Timestamp: time.Now(),
 	}
 	msg, err := ss.Process()
 	if err != nil {

@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// Action is a base interface for implementing callbacks that occur after a given
+// duration. Calls to `DoAction()` occur when timers run out.
 type Action interface {
 	DoAction() // run a parameterless function
 }

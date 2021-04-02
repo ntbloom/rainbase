@@ -23,6 +23,8 @@ const (
 
 	DatabaseLocalProdFile = "database.local.prod.file"
 	DatabaseLocalDevFile  = "database.local.dev.file"
+
+	MessengerStatusInterval = "messenger.status.interval"
 )
 
 // random constants, not tied to config
