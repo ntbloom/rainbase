@@ -38,3 +38,5 @@ database:
 messenger:
   status:
     interval: 3s
+  temperature:
+    interval: 3s
