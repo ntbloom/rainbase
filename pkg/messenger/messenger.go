@@ -55,8 +55,6 @@ func (m *Messenger) Listen() {
 			case configkey.SendStatusMessage:
 				logrus.Debug("requesting status message")
 				m.SendStatus()
-			default:
-				continue
 			}
 		case msg := <-m.Data:
 			logrus.Tracef("received Message from serial port: %s", msg.payload)
