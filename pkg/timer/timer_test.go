@@ -44,5 +44,5 @@ func TestTimer(t *testing.T) {
 	// could be +/- 1 depending on how fast the test runs and whether race checker is on
 	goodEnough := count == 4 || count == 5 || count == 6
 	logrus.Infof("count=%d", count)
-	assert.Equal(t, goodEnough, true)
+	assert.Equal(t, goodEnough, true, "count=%d", count)
 }

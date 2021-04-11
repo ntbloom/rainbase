@@ -20,17 +20,17 @@ tasks:
     desc: Run test suite with race checker
     cmds:
       - go clean -testcache
-      - go test -race ./... | grep -v "no test files"
+      - go test -v -race ./... | grep -v "no test files"
 
   short:
     desc: Run short test suite without caching
     cmds:
-      - go test -short ./... | grep -v "no test files"
+      - go test -v -short ./... | grep -v "no test files"
 
   cover:
     desc: Run tests with coverage report
     cmds:
-      - go test -cover ./...
+      - go test -v -cover ./...
 
   run:
     desc: run the binary
