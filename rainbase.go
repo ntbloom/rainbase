@@ -67,14 +67,14 @@ func (k *kill) DoAction() {
 	os.Exit(0)
 }
 
-func startKillTimer(duration time.Duration, killChannels []chan uint8) *timer.Timer {
+func startKillTimer(duration, frequency time.Duration, killChannels []chan uint8) *timer.Timer {
 	k := kill{killChannels}
-	t := timer.NewTimer(duration, &k)
+	t := timer.NewTimer(duration, frequency, &k)
 	return t
 }
 
 // run main listening loop for number of seconds or indefinitely if duration is negative
-func listen(duration time.Duration) {
+func listen(duration, frequency time.Duration) {
 	client := connectToMQTT()
 	db := connectToDatabase()
 	msgr := messenger.NewMessenger(client, db)
@@ -86,7 +86,7 @@ func listen(duration time.Duration) {
 
 	// start a timer
 	killChannels := []chan uint8{conn.State, msgr.State}
-	t := startKillTimer(duration, killChannels)
+	t := startKillTimer(duration, frequency, killChannels)
 	go t.Loop()
 
 	// kill process with sigint regardless of whether duration is negative
@@ -106,6 +106,7 @@ func main() {
 	config.Configure()
 
 	// run the main listening loop
-	duration := time.Second * -10
-	listen(duration)
+	duration := viper.GetDuration(configkey.MainLoopDuration)
+	frequency := viper.GetDuration(configkey.MainLoopFrequency)
+	listen(duration, frequency)
 }

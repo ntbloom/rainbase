@@ -38,5 +38,12 @@ database:
 messenger:
   status:
     interval: 3s
-  temperature:
+    frequency: 1s
+  temperature: # not implemented yet
     interval: 3s
+    frequency: 1s
+
+main:
+  loop:
+    duration: -1s
+    frequency: -10s
