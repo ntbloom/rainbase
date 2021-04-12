@@ -28,6 +28,7 @@ func TestTimer(t *testing.T) {
 	var count int
 
 	go countTimer.Loop()
+	time.Sleep(time.Millisecond * 200)
 
 	fake.Lock()
 	count = fake.counter
@@ -42,7 +43,8 @@ func TestTimer(t *testing.T) {
 	fake.Unlock()
 
 	// could be +/- 1 depending on how fast the test runs and whether race checker is on
-	goodEnough := count == 4 || count == 5 || count == 6
+	// goodEnough := count == 4 || count == 5 || count == 6
 	logrus.Infof("count=%d", count)
-	assert.Equal(t, goodEnough, true, "count=%d", count)
+	// assert.Equal(t, goodEnough, true, "count=%d", count)
+	assert.Equal(t, count, 5)
 }

@@ -4,6 +4,8 @@ package timer
 
 import (
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 // Action is a base interface for implementing callbacks that occur after a given
@@ -31,26 +33,40 @@ func NewTimer(interval time.Duration, action Action) *Timer {
 	}
 }
 
-// Loop runs an infinite loop, triggering an action. stops when receives message on Finish channel
+// Loop runs an infinite loop, triggering an action. stops when receives message on Kill channel
 func (t *Timer) Loop() {
-	for {
-		if t.interval > 0 {
-			t.check()
-		}
+	trigger := make(chan bool)
+	stopChecking := make(chan bool)
+	if t.interval > 0 {
+		go t.checkTimer(trigger, stopChecking, time.Millisecond*500)
+	}
 
+	for {
 		select {
 		case <-t.Kill:
-			go t.action.DoAction()
 			return
-		default:
-			continue
+		case <-trigger:
+			go t.action.DoAction()
 		}
 	}
 }
 
-func (t *Timer) check() {
-	if time.Since(t.start) > t.interval {
-		t.start = time.Now()
-		go t.action.DoAction()
+// checkTimer infinitely checks clock every `wait` duration, sends message when trigger is up
+func (t *Timer) checkTimer(trigger chan bool, stopChecking chan bool, wait time.Duration) {
+	if wait > t.interval {
+		logrus.Errorf("wait %s > Timer.interval %s", wait, t.interval)
+		panic("wait must be less than Timer.interval")
+	}
+	for {
+		if time.Since(t.start) > t.interval {
+			t.start = time.Now()
+			trigger <- true
+		}
+		select {
+		case <-stopChecking:
+			return
+		default:
+			time.Sleep(wait)
+		}
 	}
 }
