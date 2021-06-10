@@ -39,8 +39,9 @@ func (m *Messenger) Listen() {
 
 	// configure status messages
 	statusInterval := viper.GetDuration(configkey.MessengerStatusInterval)
+	statusFrequency := viper.GetDuration(configkey.MessengerStatusFrequency)
 	if statusInterval > 0 {
-		statusTimer := timer.NewChannelUint8Timer(statusInterval, m.State, configkey.SendStatusMessage)
+		statusTimer := timer.NewChannelUint8Timer(statusInterval, statusFrequency, m.State, configkey.SendStatusMessage)
 		go statusTimer.Loop()
 	}
 
@@ -55,8 +56,6 @@ func (m *Messenger) Listen() {
 			case configkey.SendStatusMessage:
 				logrus.Debug("requesting status message")
 				m.SendStatus()
-			default:
-				continue
 			}
 		case msg := <-m.Data:
 			logrus.Tracef("received Message from serial port: %s", msg.payload)

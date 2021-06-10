@@ -38,5 +38,12 @@ database:
 messenger:
   status:
     interval: 60s
+    frequency: 1s
   temperature:
     interval: 60s
+    frequency: 1s
+
+main:
+  loop:
+    duration: -1s
+    frequency: -10s
