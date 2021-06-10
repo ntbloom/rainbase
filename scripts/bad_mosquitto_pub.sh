@@ -6,14 +6,13 @@ set -x
 HOSTNAME=68.183.114.124
 PORT=8883
 
-
+echo "THIS SHOULD NOT WORK!"
 mosquitto_pub \
   -u rainbase \
-  -P $(cat $HOME/rainbase.pw) \
   -h $HOSTNAME \
   -q 0 \
   -p $PORT \
-  -t $1 \
-  -m $2
+  -t hello \
+  -m world
 
 
