@@ -11,12 +11,13 @@ CERT=$SSL/client.crt
 KEY=$SSL/client.key
 
 
+
+
 mosquitto_pub \
   -u rainbase \
   -P $(cat $HOME/rainbase.pw) \
-  --cafile  $CAFILE \
-  --cert $CERT \
-  --key $KEY \
+  --psk-identity rainbase \
+  --psk $(cat $HOME/rainbase.psk) \
   --tls-version tlsv1.2 \
   -h $HOSTNAME \
   -q 0 \
