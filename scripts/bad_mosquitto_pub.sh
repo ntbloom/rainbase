@@ -16,3 +16,11 @@ mosquitto_pub \
   -m world
 
 
+mosquitto_pub \
+  -u rainbase \
+  -P bad_passwd \
+  -h $HOSTNAME \
+  -q 0 \
+  -p $PORT \
+  -t hello \
+  -m world
